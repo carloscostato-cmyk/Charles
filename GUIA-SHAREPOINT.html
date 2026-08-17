@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Guia - Colocar o Chatbot Charles no SharePoint</title>
+<style>
+  :root {
+    --azul: #0078d4;
+    --azul-escuro: #005a9e;
+    --verde: #107c10;
+    --vermelho: #d13438;
+    --cinza: #f3f2f1;
+    --borda: #e1dfdd;
+    --texto: #323130;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    color: var(--texto);
+    background: #fff;
+    line-height: 1.55;
+    font-size: 15px;
+  }
+  @page { margin: 18mm 16mm 18mm 16mm; }
+
+  /* ===== CAPA ===== */
+  .capa {
+    page-break-after: always;
+    padding: 60px 40px;
+    text-align: center;
+    background: linear-gradient(135deg, #0b3b6f 0%, #0078d4 55%, #00bcf2 100%);
+    color: #fff;
+    min-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border-radius: 0;
+  }
+  .capa .logo-charles {
+    width: 140px; height: 140px; margin: 0 auto 25px;
+    background: #fff; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 70px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  }
+  .capa h1 { font-size: 38px; margin: 10px 0 5px; letter-spacing: 0.5px; }
+  .capa h2 { font-size: 20px; font-weight: 400; opacity: 0.95; margin-bottom: 25px; }
+  .capa .badge {
+    display: inline-block; background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.5);
+    padding: 8px 20px; border-radius: 25px; margin: 8px 4px;
+    font-size: 13px;
+  }
+  .capa .info-rodape { margin-top: 50px; font-size: 14px; opacity: 0.85; }
+
+  /* ===== ESTRUTURA ===== */
+  .pagina { padding: 10px 0 30px; }
+  h1.secao {
+    font-size: 26px; color: var(--azul); margin: 25px 0 15px;
+    padding-bottom: 8px; border-bottom: 3px solid var(--azul);
+    page-break-before: auto;
+  }
+  h2 { font-size: 19px; color: var(--azul-escuro); margin: 20px 0 10px; }
+  h3 { font-size: 16px; margin: 15px 0 8px; }
+  p { margin: 8px 0; }
+  ul, ol { margin: 8px 0 8px 25px; }
+  li { margin: 5px 0; }
+
+  /* ===== CAIXAS ===== */
+  .dica {
+    background: #e8f5e9; border-left: 5px solid var(--verde);
+    padding: 12px 16px; border-radius: 4px; margin: 15px 0;
+  }
+  .atencao {
+    background: #fdecec; border-left: 5px solid var(--vermelho);
+    padding: 12px 16px; border-radius: 4px; margin: 15px 0;
+  }
+  .info {
+    background: #eef4fb; border-left: 5px solid var(--azul);
+    padding: 12px 16px; border-radius: 4px; margin: 15px 0;
+  }
+  .passo {
+    background: var(--cinza); border: 1px solid var(--borda);
+    border-radius: 8px; padding: 18px 22px; margin: 22px 0;
+    page-break-inside: avoid;
+  }
+  .passo-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--azul); color: #fff; font-weight: 700;
+    font-size: 18px; margin-right: 10px; vertical-align: middle;
+  }
+  .passo-titulo { font-size: 18px; font-weight: 700; color: var(--azul-escuro); }
+
+  /* ===== CÓDIGO / TERMINAL ===== */
+  .codigo {
+    background: #1e1e1e; color: #d4d4d4;
+    font-family: 'Cascadia Code', Consolas, monospace;
+    padding: 14px 18px; border-radius: 6px; margin: 12px 0;
+    font-size: 13px; white-space: pre-wrap; word-break: break-word;
+  }
+  .codigo .prompt { color: #6a9955; }
+  .comando { color: #569cd6; font-weight: 600; }
+  .saida { color: #ce9178; }
+
+  /* ===== TABELAS ===== */
+  table {
+    width: 100%; border-collapse: collapse; margin: 14px 0;
+    font-size: 14px;
+  }
+  th {
+    background: var(--azul); color: #fff; text-align: left;
+    padding: 9px 12px; font-weight: 600;
+  }
+  td {
+    border: 1px solid var(--borda); padding: 8px 12px; vertical-align: top;
+  }
+  tr:nth-child(even) td { background: #faf9f8; }
+
+  /* ===== TELAS SIMULADAS (MOCKUPS) ===== */
+  .mockup {
+    border: 2px solid #bdbdbd; border-radius: 8px; margin: 18px 0;
+    overflow: hidden; box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    page-break-inside: avoid;
+  }
+  .mockup-bar {
+    background: #f3f2f1; padding: 8px 14px; border-bottom: 1px solid #bdbdbd;
+    display: flex; align-items: center; gap: 8px; font-size: 13px;
+  }
+  .mockup-bar .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+  .mockup-bar .dot-red { background: #ff5f57; }
+  .mockup-bar .dot-yellow { background: #febc2e; }
+  .mockup-bar .dot-green { background: #28c840; }
+  .mockup-bar .url {
+    background: #fff; border: 1px solid #e1dfdd; border-radius: 20px;
+    padding: 3px 16px; flex: 1; font-size: 12px; color: #605e5c;
+    font-family: Consolas, monospace;
+  }
+  .mockup-body { background: #fff; padding: 16px; min-height: 80px; }
+  .mockup-body.tela { background: #faf9f8; }
+
+  /* Simulação de tela do SharePoint */
+  .sp-header {
+    background: #0078d4; color: #fff; padding: 10px 16px;
+    display: flex; align-items: center; gap: 14px; font-size: 14px;
+    border-radius: 4px 4px 0 0;
+  }
+  .sp-nav {
+    background: #f3f2f1; padding: 8px 16px; font-size: 13px; color: #323130;
+    display: flex; gap: 18px; border-bottom: 1px solid #e1dfdd;
+  }
+  .sp-nav span { cursor: pointer; }
+  .sp-nav .ativo { color: var(--azul); font-weight: 600; border-bottom: 3px solid var(--azul); padding-bottom: 6px; }
+  .sp-body { padding: 18px; background: #fff; }
+  .card-bnb {
+    border: 1px solid #e1dfdd; border-radius: 6px; margin: 12px 0;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  }
+  .card-bnb-head {
+    background: #faf9f8; padding: 10px 14px; border-bottom: 1px solid #e1dfdd;
+    font-weight: 600; font-size: 14px;
+  }
+  .card-bnb-body { padding: 14px; }
+
+  /* Botão simulado */
+  .btn-sim {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--azul); color: #fff; border: none;
+    padding: 8px 18px; border-radius: 4px; font-size: 14px;
+    font-weight: 600;
+  }
+  .btn-sim.verde { background: var(--verde); }
+
+  /* Formulários simulados */
+  .campo-sim {
+    border: 2px solid var(--azul); background: #fff;
+    border-radius: 4px; padding: 10px 12px; margin: 6px 0;
+    font-size: 13px; color: #605e5c;
+  }
+  .campo-sim label { display: block; font-size: 13px; margin-bottom: 4px; color: #323130; font-weight: 600; }
+  .campo-sim input { width: 100%; border: none; font-size: 14px; padding: 4px; font-family: Consolas, monospace; }
+  .seta {
+    color: var(--azul); font-size: 22px; text-align: center; margin: 6px 0;
+  }
+
+  /* ===== FORMULÁRIO DE PREENCHIMENTO ===== */
+  .form-espaco {
+    background: #fff; border: 2px dashed var(--azul);
+    border-radius: 8px; padding: 14px 18px; margin: 14px 0;
+  }
+  .form-espaco .linha { display: flex; gap: 12px; margin: 8px 0; align-items: center; flex-wrap: wrap; }
+  .form-espaco .rotulo { width: 220px; font-weight: 600; font-size: 14px; }
+  .form-espaco .espaco {
+    flex: 1; border: 1px solid #bdbdbd; border-radius: 4px;
+    padding: 8px 10px; background: #faf9f8; min-width: 250px;
+    color: #a19f9d; font-size: 13px; font-family: Consolas, monospace;
+  }
+
+  /* ===== NÚMEROS GRANDES ===== */
+  .num-grande {
+    font-size: 40px; font-weight: 800; color: var(--azul);
+    font-style: italic; opacity: 0.25; float: right;
+  }
+
+  /* ===== FOOTER ===== */
+  .rodape-pagina {
+    margin-top: 30px; padding-top: 10px; border-top: 1px solid var(--borda);
+    font-size: 12px; color: #a19f9d;
+  }
+
+  /* ===== CHECKLIST ===== */
+  .check-item {
+    display: flex; align-items: flex-start; gap: 10px; margin: 8px 0;
+  }
+  .check-box {
+    width: 20px; height: 20px; border: 2px solid var(--verde);
+    border-radius: 4px; flex-shrink: 0; margin-top: 2px;
+  }
+
+  /* ===== SUMÁRIO ===== */
+  .sumario { page-break-after: always; }
+  .sumario ul { list-style: none; margin: 0; }
+  .sumario li { margin: 10px 0; font-size: 16px; }
+  .sumario .num { display: inline-block; width: 34px; color: var(--azul); font-weight: 700; }
+
+  .center { text-align: center; }
+  .mt20 { margin-top: 20px; }
+</style>
+</head>
+<body>
+
+<!-- ================= CAPA ================= -->
+<div class="capa">
+  <div class="logo-charles">🤖</div>
+  <h1>CHARLES</h1>
+  <h2>Assistente Virtual — Departamento de Data Center</h2>
+  <div>
+    <span class="badge">📘 Guia para Iniciantes</span>
+    <span class="badge">🖥️ Passo a Passo com Telas</span>
+    <span class="badge">📌 Nível: Fácil</span>
+  </div>
+  <div style="margin-top:30px; font-size:16px; background: rgba(255,255,255,0.15); border-radius:10px; padding:18px; max-width:640px; margin-left:auto; margin-right:auto;">
+    <strong>Objetivo deste guia:</strong><br>
+    Fazer o Chatbot Charles aparecer e funcionar dentro de uma página do <strong>SharePoint</strong>, mesmo sem saber programar.
+  </div>
+  <div class="info-rodape">
+    Claro Empresas — Data Center<br>
+    Versão 1.0 — 04/08/2026
+  </div>
+</div>
+
+<!-- ================= SUMÁRIO ================= -->
+<div class="sumario pagina">
+  <h1 class="secao">📑 Sumário</h1>
+  <ul>
+    <li><span class="num">1.</span> O que você vai aprender</li>
+    <li><span class="num">2.</span> Como funciona (em linguagem simples)</li>
+    <li><span class="num">3.</span> O que você precisa ter antes de começar</li>
+    <li><span class="num">4.</span> Passo 1 — Instalar o Node.js no computador</li>
+    <li><span class="num">5.</span> Passo 2 — Colocar o projeto Charles no computador</li>
+    <li><span class="num">6.</span> Passo 3 — Configurar o arquivo de chaves (.env)</li>
+    <li><span class="num">7.</span> Passo 4 — Instalar as dependências (npm install)</li>
+    <li><span class="num">8.</span> Passo 5 — Ligar o servidor (npm start)</li>
+    <li><span class="num">9.</span> Passo 6 — Testar o Charles no navegador</li>
+    <li><span class="num">10.</span> Passo 7 — Anotar o endereço (IP) do computador</li>
+    <li><span class="num">11.</span> Passo 8 — Liberar a porta 3000 no Firewall</li>
+    <li><span class="num">12.</span> Passo 9 — Colocar o Charles no SharePoint (Web Part Incorporar)</li>
+    <li><span class="num">13.</span> Passo 10 — Ajustar o tamanho do quadro</li>
+    <li><span class="num">14.</span> Formulário de preenchimento rápido</li>
+    <li><span class="num">15.</span> Problemas comuns e como resolver</li>
+    <li><span class="num">16.</span> Checklist final</li>
+  </ul>
+  <div class="info" style="margin-top:30px;">
+    <strong>⏱️ Tempo total estimado:</strong> 30 a 60 minutos, seguindo cada tela deste guia.
+  </div>
+</div>
+
+<!-- ================= 1. O QUE VOCÊ VAI APRENDER ================= -->
+<div class="pagina">
+  <h1 class="secao">1. O Que Você Vai Aprender</h1>
+  <p>Ao final deste guia, o <strong>Charles</strong> estará acessível dentro de uma página do <strong>SharePoint</strong> da sua empresa. Ou seja: qualquer pessoa com acesso àquela página do SharePoint poderá abrir a página e <strong>conversar com o Charles</strong> ali mesmo.</p>
+
+  <table>
+    <tr><th style="width:50%">Você vai aprender a...</th><th>Resultado</th></tr>
+    <tr><td>Instalar o programa que faz o Charles rodar (Node.js)</td><td>✅ Charles ligado</td></tr>
+    <tr><td>Configurar as chaves de acesso da inteligência artificial</td><td>✅ Charles consegue responder</td></tr>
+    <tr><td>Ligar o servidor e testar no navegador</td><td>✅ Charles funcionando</td></tr>
+    <tr><td>Descobrir o endereço do seu computador na rede</td><td>✅ Outras pessoas acessam</td></tr>
+    <tr><td>Abrir a porta no Firewall do Windows</td><td>✅ Rede liberada</td></tr>
+    <tr><td>Embutir o Charles numa página do SharePoint</td><td>✅ Charles no SharePoint 🎉</td></tr>
+  </table>
+
+  <div class="dica">
+    <strong>💡 Resumo do guia em 1 frase:</strong>
+    O Charles roda num computador da sua equipe (como um "servidor"). No SharePoint, você cria uma página com um quadro (Web Part) chamado <strong>"Incorporar"</strong>, que mostra a tela do Charles dentro da página — exatamente como um vídeo do YouTube aparece dentro de um site.
+  </div>
+</div>
+
+<!-- ================= 2. COMO FUNCIONA ================= -->
+<div class="pagina">
+  <h1 class="secao">2. Como Funciona (Em Linguagem Simples)</h1>
+  <p>Antes de começar, é importante entender o "mapa" de como tudo se conecta:</p>
+
+  <div class="mockup">
+    <div class="mockup-body center">
+      <div style="display:flex; align-items:center; justify-content:center; gap:20px; flex-wrap:wrap;">
+        <div style="border:2px solid #0078d4; border-radius:10px; padding:16px 20px; min-width:160px; background:#eef4fb;">
+          <div style="font-size:32px;">👤</div>
+          <strong>Usuário</strong><br>
+          <span style="font-size:12px; color:#605e5c;">Abre a página no SharePoint</span>
+        </div>
+        <div style="font-size:26px; color:#0078d4;">➜</div>
+        <div style="border:2px solid #d13438; border-radius:10px; padding:16px 20px; min-width:160px; background:#fdecec;">
+          <div style="font-size:32px;">📄</div>
+          <strong>Página do SharePoint</strong><br>
+          <span style="font-size:12px; color:#605e5c;">Tem o quadro "Incorporar"</span>
+        </div>
+        <div style="font-size:26px; color:#0078d4;">➜</div>
+        <div style="border:2px solid #107c10; border-radius:10px; padding:16px 20px; min-width:160px; background:#e8f5e9;">
+          <div style="font-size:32px;">🤖</div>
+          <strong>Charles</strong><br>
+          <span style="font-size:12px; color:#605e5c;">Roda no computador "servidor"</span>
+        </div>
+      </div>
+      <div style="font-size:13px; color:#605e5c; margin-top:16px;">
+        No SharePoint → Inserir → <strong>Incorporar</strong> → colar o endereço do Charles → Publicar ✅
+      </div>
+    </div>
+  </div>
+
+  <h2>O que é cada parte?</h2>
+  <table>
+    <tr><th>Parte</th><th>O que é</th><th>Onde fica</th></tr>
+    <tr>
+      <td><strong>🤖 Charles</strong></td>
+      <td>O seu chatbot (servidor Node.js + tela HTML)</td>
+      <td>Num computador da equipe, sempre ligado</td>
+    </tr>
+    <tr>
+      <td><strong>📄 Página do SharePoint</strong></td>
+      <td>Uma página do site da empresa onde o Charles será mostrado</td>
+      <td>No SharePoint da Claro</td>
+    </tr>
+    <tr>
+      <td><strong>🔗 Quadro "Incorporar" (Embed)</strong></td>
+      <td>Uma "janela" que mostra o conteúdo de outro site dentro da página</td>
+      <td>Dentro da página do SharePoint</td>
+    </tr>
+  </table>
+
+  <div class="atencao">
+    <strong>⚠️ Importante:</strong> O Charles <u>não é instalado "dentro" do SharePoint</u>. Ele roda num computador da equipe, e o SharePoint apenas <strong>mostra</strong> ele numa janela. É assim que funciona com YouTube, Power BI, e muitos outros sistemas.
+  </div>
+</div>
+
+<!-- ================= 3. PRÉ-REQUISITOS ================= -->
+<div class="pagina">
+  <h1 class="secao">3. O Que Você Precisa Ter Antes de Começar</h1>
+
+  <table>
+    <tr><th style="width:40%">Item</th><th>Onde conseguir</th><th>Obrigatório?</th></tr>
+    <tr>
+      <td>💻 Um computador com Windows (que ficará ligado)</td>
+      <td>Qualquer máquina da equipe com Windows</td>
+      <td>✅ Sim</td>
+    </tr>
+    <tr>
+      <td>🟢 Node.js instalado</td>
+      <td>Baixado gratuitamente em <strong>nodejs.org</strong> (fazemos no Passo 1)</td>
+      <td>✅ Sim</td>
+    </tr>
+    <tr>
+      <td>📂 A pasta do projeto Charles (chatonus)</td>
+      <td>Compartilhada pelo time de TI / já está no seu computador</td>
+      <td>✅ Sim</td>
+    </tr>
+    <tr>
+      <td>🔑 Chave de API do Groq (ou OpenRouter/Gemini)</td>
+      <td>Cadastro gratuito em <strong>console.groq.com</strong> (mostramos como)</td>
+      <td>✅ Sim (para respostas com IA)</td>
+    </tr>
+    <tr>
+      <td>🏢 Acesso ao SharePoint da Claro (com permissão de edição)</td>
+      <td>Com o usuário corporativo no navegador</td>
+      <td>✅ Sim</td>
+    </tr>
+    <tr>
+      <td>📶 Conexão com a rede da empresa</td>
+      <td>Rede Wi-Fi/Cabeada da Claro</td>
+      <td>✅ Sim</td>
+    </tr>
+  </table>
+
+  <div class="form-espaco">
+    <h3>📝 Preencha antes de começar</h3>
+    <div class="linha"><span class="rotulo">Nome do computador que rodará o Charles:</span><span class="espaco">___________________________</span></div>
+    <div class="linha"><span class="rotulo">Endereço do site do SharePoint:</span><span class="espaco">https://____________________</span></div>
+    <div class="linha"><span class="rotulo">Chave da API (Groq):</span><span class="espaco">gsk_______________________________</span></div>
+  </div>
+
+  <div class="dica">
+    <strong>💡 Boa prática:</strong> Escolha um computador que <strong>fique sempre ligado</strong> na empresa (ex.: uma VM, um desktop da recepção, um notebook parado). Se esse computador desligar, o Charles sai do ar.
+  </div>
+</div>
+
+<!-- ================= 4. PASSO 1 - INSTALAR NODE.JS ================= -->
+<div class="pagina">
+  <h1 class="secao">4. Passo 1 — Instalar o Node.js</h1>
+
+  <p>O <strong>Node.js</strong> é o "motor" que faz o Charles funcionar. É gratuito e oficial.</p>
+
+  <div class="passo">
+    <span class="passo-num">1</span> <span class="passo-titulo">Abrir o site oficial</span>
+    <p>No computador que será o servidor, abra o navegador (Chrome ou Edge) e acesse:</p>
+    <div class="codigo">https://nodejs.org</div>
+    <div class="mockup">
+      <div class="mockup-bar">
+        <span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span>
+        <span class="url">https://nodejs.org</span>
+      </div>
+      <div class="mockup-body center">
+        <div style="font-size:28px; font-weight:800; color:#539e43;">Node.js®</div>
+        <div style="font-size:14px; color:#605e5c; margin:8px 0;">Run JavaScript Everywhere</div>
+        <div style="display:flex; gap:14px; justify-content:center; flex-wrap:wrap; margin-top:10px;">
+          <div class="btn-sim verde">Baixar versão LTS 👇</div>
+          <div style="padding:8px 18px; border:1px solid #bdbdbd; border-radius:4px; color:#605e5c; font-size:13px;">Prefere o npm?</div>
+        </div>
+        <div style="font-size:12px; color:#a19f9d; margin-top:8px;">⬅️ Clique no botão verde "LTS" (versão recomendada)</div>
+      </div>
+    </div>
+    <div class="dica">
+      <strong>💡 Escolha sempre a versão LTS</strong> (o botão verde da esquerda). É a versão estável e recomendada.
+    </div>
+  </div>
+
+  <div class="passo">
+    <span class="passo-num">2</span> <span class="passo-titulo">Executar o instalador</span>
+    <p>Quando o download terminar, abra o arquivo baixado (ex.: <span style="font-family:Consolas;">node-v20.xx.x-x64.msi</span>). Clique em <strong>Next</strong> várias vezes até o botão <strong>Install</strong> e depois <strong>Finish</strong>.</p>
+    <div class="mockup">
+      <div class="mockup-bar">
+        <span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span>
+        <span class="url">Instalação do Node.js</span>
+      </div>
+      <div class="mockup-body">
+        <table style="border:none;">
+          <tr><td style="border:none; width:30%; color:#605e5c;">Welcome to the Node.js Setup Wizard</td>
+              <td style="border:none; text-align:right;">
+                <span class="btn-sim" style="background:#e1dfdd; color:#333;">Cancel</span>
+                <span class="btn-sim" style="background:#e1dfdd; color:#333;">Back</span>
+                <span class="btn-sim">Next ></span>
+              </td></tr>
+        </table>
+        <div style="font-size:12px; color:#a19f9d; text-align:right;">⬅️ Siga com "Next" até "Install"</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="passo">
+    <span class="passo-num">3</span> <span class="passo-titulo">Confirmar que instalou</span>
+    <p>Abra o <strong>Prompt de Comando</strong> do Windows: clique no menu Iniciar, digite <span style="font-family:Consolas;">cmd</span> e pressione Enter. Depois digite e dê Enter:</p>
+    <div class="codigo"><span class="prompt">C:\Users\voce></span> <span class="comando">node --version</span>
+<span class="saida">v20.11.0</span></div>
+    <div class="dica">Se aparecer <strong>v20</strong> ou <strong>v22</strong> (qualquer número), o Node.js está instalado. ✅</div>
+  </div>
+</div>
+
+<!-- ================= 5. PASSO 2 - COLOCAR O PROJETO ================= -->
+<div class="pagina">
+  <h1 class="secao">5. Passo 2 — Colocar o Projeto Charles no Computador</h1>
+
+  <p>O projeto Charles é uma pasta chamada <strong>chatonus</strong> (esta pasta onde você está lendo este guia). Ela precisa estar no computador servidor.</p>
+
+  <div class="passo">
+    <span class="passo-num">1</span> <span class="passo-titulo">Copiar a pasta do projeto</span>
+    <p>Copie a pasta <strong>chatonus</strong> inteira para o computador servidor. Pode ser em qualquer lugar, por exemplo:</p>
+    <div class="codigo">C:\Chatbot\chatonus</div>
+    <div class="mockup">
+      <div class="mockup-bar">
+        <span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span>
+        <span class="url">C:\Chatbot\chatonus — Explorador de Arquivos</span>
+      </div>
+      <div class="mockup-body" style="font-family:Consolas; font-size:13px;">
+        📁 backend<br>
+        📁 frontend<br>
+        📁 assets<br>
+        📁 scripts<br>
+        📄 <strong>chatdatabase.db</strong><br>
+        📄 <strong>sites_data_center.xlsx</strong>  ← dados dos Data Centers<br>
+        📄 <strong>.env</strong>  ← chaves de IA (configuramos no Passo 3)<br>
+        📄 Dockerfile<br>
+        📄 package.json
+      </div>
+    </div>
+    <div class="info">
+      <strong>ℹ️ Nome dos arquivos importantes:</strong> a pasta <span style="font-family:Consolas;">backend</span> contém o servidor; o arquivo <span style="font-family:Consolas;">.env</span> guarda as chaves; o <span style="font-family:Consolas;">sites_data_center.xlsx</span> tem os dados dos 11 Data Centers.
+    </div>
+  </div>
+
+  <div class="atencao">
+    <strong>⚠️ Muito importante:</strong> A pasta precisa estar <u>completa</u> (backend, frontend, assets, .env, sites_data_center.xlsx, chatdatabase.db). Se faltar algum arquivo, o Charles pode não ligar.
+  </div>
+</div>
+
+<!-- ================= 6. PASSO 3 - CONFIGURAR .env ================= -->
+<div class="pagina">
+  <h1 class="secao">6. Passo 3 — Configurar o Arquivo de Chaves (.env)</h1>
+
+  <p>O arquivo <strong>.env</strong> é onde ficam as chaves secretas que permitem o Charles conversar com a inteligência artificial (Groq). Sem ele, o Charles responde só com a base local.</p>
+
+  <div class="passo">
+    <span class="passo-num">1</span> <span class="passo-titulo">Obter a chave gratuita do Groq (se ainda não tiver)</span>
+    <p>No navegador, acesse <strong>console.groq.com</strong>, crie uma conta gratuita (pode usar o e-mail corporativo) e clique em <strong>API Keys → Create API Key</strong>. Copie a chave (começa com <span style="font-family:Consolas;">gsk_</span>).</p>
+    <div class="mockup">
+      <div class="mockup-bar">
+        <span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span>
+        <span class="url">https://console.groq.com/keys</span>
+      </div>
+      <div class="mockup-body">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <strong style="color:#0078d4; font-size:16px;">API Keys</strong>
+          <span class="btn-sim verde">+ Create API Key</span>
+        </div>
+        <div style="background:#f3f2f1; border-radius:6px; padding:10px; margin-top:12px; font-family:Consolas; font-size:13px;">
+          gsk_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx <button style="float:right; background:#0078d4; color:#fff; border:none; padding:4px 12px; border-radius:4px;">📋 Copiar</button>
+        </div>
+        <div style="font-size:12px; color:#a19f9d; margin-top:6px;">⬅️ Exemplo: a chave aparecerá aqui. Copie!</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="passo">
+    <span class="passo-num">2</span> <span class="passo-titulo">Abrir o arquivo .env no editor</span>
+    <p>Na pasta do projeto, abra o arquivo <strong>.env</strong> com o Bloco de Notas (clique com o botão direito → Abrir com → Bloco de Notas).</p>
+    <div class="mockup">
+      <div class="mockup-bar">
+        <span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span>
+        <span class="url">.env — Bloco de Notas</span>
+      </div>
+      <div class="mockup-body" style="font-family:Consolas; font-size:13px; background:#1e1e1e; color:#d4d4d4;">
+        <span style="color:#6a9955;"># Provedor principal</span><br>
+        LLM_PROVIDER=groq<br>
+        <span style="color:#6a9955;"># Chaves de API</span><br>
+        <span style="background:#fff; color:#d13438; padding:1px 4px;">GROQ_API_KEY=sua_chave_aqui</span><br>
+        OPENROUTER_API_KEY=<br>
+        GEMINI_API_KEY=<br>
+        <span style="color:#6a9955;"># Porta do servidor</span><br>
+        PORT=3000
+      </div>
+    </div>
+  </div>
+
+  <div class="passo">
+    <span class="passo-num">3</span> <span class="passo-titulo">Preencher os campos</span>
+    <table>
+      <tr><th>Campo no arquivo</th><th>O que colocar</th></tr>
+      <tr><td style="font-family:Consolas;">GROQ_API_KEY=</td><td>Cole a chave que copiou no site do Groq (começa com <span style="font-family:Consolas;">gsk_</span>)</td></tr>
+      <tr><td style="font-family:Consolas;">OPENROUTER_API_KEY=</td><td>Deixe vazio (é opcional / reserva)</td></tr>
+      <tr><td style="font-family:Consolas;">GEMINI_API_KEY=</td><td>Deixe vazio (é opcional / reserva)</td></tr>
+      <tr><td style="font-family:Consolas;">PORT=3000</td><td>Mantenha 3000 (padrão)</td></tr>
+      <tr><td style="font-family:Consolas;">LLM_PROVIDER=groq</td><td>Mantenha "groq"</td></tr>
+    </table>
+    <div class="atencao">
+      <strong>⚠️ Não apague as outras linhas</strong> e não coloque espaços extras. Salve com <strong>Ctrl+S</strong>.
+    </div>
+  </div>
+</div>
+
+<!-- ================= 7. PASSO 4 - npm install ================= -->
+<div class="pagina">
+  <h1 class="secao">7. Passo 4 — Instalar as Dependências (npm install)</h1>
+
+  <p>As <strong>dependências</strong> são as bibliotecas prontas que o Charles usa. O comando abaixo baixa tudo automaticamente.</p>
+
+  <div class="passo">
+    <span class="passo-num">1</span> <span class="passo-titulo">Abrir o Prompt de Comando dentro da pasta do projeto</span>
+    <p>No Windows, abra a pasta <strong>chatonus</strong> no Explorador de Arquivos. Clique na <strong>barra de endereço</strong> (onde mostra o caminho), apague tudo, digite <span style="font-family:Consolas;">cmd</span> e pressione Enter.</p>
+    <div class="mockup">
+      <div class="mockup-bar">
+        <span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span>
+        <span class="url">C:\Chatbot\chatonus</span>
+      </div>
+      <div class="mockup-body center">
+        <div style="font-size:12px; color:#605e5c;">⬅️ Barra de endereço do Explorador de Arquivos</div><br>
+        <div class="campo-sim" style="max-width:380px; margin:0 auto; font-family:Consolas;">C:\Chatbot\chatonus<span style="float:right;">➡</span></div>
+        <div style="font-size:12px; color:#a19f9d; margin-top:8px;">Digite "cmd" aqui e dê Enter ➡ abre o terminal nesta pasta</div>
+      </div>
+    </div>
+    <div class="dica">Alternativa: abra o <strong>cmd</strong> e use <span style="font-family:Consolas;">cd C:\Chatbot\chatonus</span></div>
+  </div>
+
+  <div class="passo">
+    <span class="passo-num">2</span> <span class="passo-titulo">Executar o comando de instalação</span>
+    <p>No terminal (dentro da pasta do projeto), digite e dê Enter:</p>
+    <div class="codigo"><span class="prompt">C:\Chatbot\chatonus></span> <span class="comando">cd backend</span>
+<span class="prompt">C:\Chatbot\chatonus\backend></span> <span class="comando">npm install</span></div>
+    <p>O terminal vai mostrar barras de progresso e mensagens. Pode demorar de 2 a 10 minutos.</p>
+    <div class="mockup">
+      <div class="mockup-bar"><span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span><span class="url">Prompt de Comando</span></div>
+      <div class="mockup-body" style="font-family:Consolas; font-size:12px; background:#1e1e1e; color:#d4d4d4;">
+        <span class="prompt">C:\Chatbot\chatonus\backend></span> <span style="color:#569cd6;">npm install</span><br>
+        <span style="color:#6a9955;">npm</span> <span style="color:#ce9178;">notice</span> created a lockfile as package-lock.json...<br>
+        added <span style="color:#ce9178;">150 packages</span> in 12s<br>
+        <span style="color:#6a9955;">found 0 vulnerabilities</span><br>
+        <span class="prompt">C:\Chatbot\chatonus\backend></span> <span style="color:#6a9955;">✅ pronto!</span>
+      </div>
+    </div>
+    <div class="dica">Se aparecer <strong>"added X packages"</strong>, deu certo!</div>
+  </div>
+</div>
+
+<!-- ================= 8. PASSO 5 - LIGAR O SERVIDOR ================= -->
+<div class="pagina">
+  <h1 class="secao">8. Passo 5 — Ligar o Servidor (npm start)</h1>
+
+  <div class="passo">
+    <span class="passo-num">1</span> <span class="passo-titulo">Iniciar o Charles</span>
+    <p>No mesmo terminal (na pasta <span style="font-family:Consolas;">backend</span>), digite e dê Enter:</p>
+    <div class="codigo"><span class="prompt">C:\Chatbot\chatonus\backend></span> <span class="comando">npm start</span></div>
+  </div>
+
+  <div class="passo">
+    <span class="passo-num">2</span> <span class="passo-titulo">Verificar se subiu corretamente</span>
+    <p>O terminal deve mostrar as mensagens de inicialização. Ao final, deve aparecer algo como:</p>
+    <div class="mockup">
+      <div class="mockup-bar"><span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span><span class="url">Prompt de Comando — Charles rodando</span></div>
+      <div class="mockup-body" style="font-family:Consolas; font-size:12px; background:#1e1e1e; color:#d4d4d4;">
+        <span style="color:#6a9955;">=================================</span><br>
+        <span style="color:#6a9955;">  Chatbot Charles v3.0 - Inicializando</span><br>
+        <span style="color:#6a9955;">=================================</span><br>
+        [Server] Carregando base de conhecimento...<br>
+        [Server] ✅ Knowledge Base pronta!<br>
+        [Server] LLM disponível! Provider: <span style="color:#ce9178;">groq</span> | Modelo: <span style="color:#ce9178;">llama-3.3-70b-versatile</span><br>
+        🚀 Servidor rodando em <span style="color:#4fc1ff; font-weight:bold;">http://localhost:3000</span><br>
+        <span style="color:#6a9955;">✅ PRONTO PARA USO!</span>
+      </div>
+    </div>
+    <div class="dica">
+      <strong>💡 Deixe esta janela do terminal ABERTA.</strong> Se fechar, o Charles desliga.
+    </div>
+    <div class="atencao">
+      <strong>⚠️ Se aparecer "Servidor rodando em http://localhost:3000"</strong>, o Charles está no ar. Avance para o Passo 6.
+    </div>
+  </div>
+</div>
+
+<!-- ================= 9. PASSO 6 - TESTAR ================= -->
+<div class="pagina">
+  <h1 class="secao">9. Passo 6 — Testar o Charles no Navegador</h1>
+
+  <div class="passo">
+    <span class="passo-num">1</span> <span class="passo-titulo">Abrir o endereço local</span>
+    <p>No navegador (no MESMO computador), acesse:</p>
+    <div class="codigo">http://localhost:3000</div>
+    <div class="mockup">
+      <div class="mockup-bar">
+        <span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span>
+        <span class="url">http://localhost:3000</span>
+      </div>
+      <div class="mockup-body center" style="background: linear-gradient(135deg,#0b3b6f,#0078d4); color:#fff; padding:30px;">
+        <div style="width:80px; height:80px; margin:0 auto; background:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:40px;">🤖</div>
+        <p style="margin-top:12px;">Fale no microfone ou clique em <strong>Digitar</strong></p>
+        <div style="display:flex; gap:16px; justify-content:center; margin-top:14px;">
+          <span style="background:rgba(255,255,255,0.25); padding:10px 18px; border-radius:30px; font-size:13px;">🎤 Falar</span>
+          <span style="background:rgba(255,255,255,0.25); padding:10px 18px; border-radius:30px; font-size:13px;">⌨️ Digitar</span>
+        </div>
+        <div style="font-size:12px; margin-top:14px; opacity:0.85;">⬅️ Esta é a tela inicial do Charles</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="passo">
+    <span class="passo-num">2</span> <span class="passo-titulo">Fazer uma pergunta de teste</span>
+    <p>Clique em <strong>Digitar</strong> e pergunte, por exemplo: <em>"Qual o telefone do data center de São Paulo?"</em></p>
+    <table>
+      <tr><th>Pergunta de teste</th><th>O que deve acontecer</th></tr>
+      <tr><td>"Onde fica o data center de São Paulo?"</td><td>Charles responde com os 3 Data Centers de SP</td></tr>
+      <tr><td>"Qual o telefone?"</td><td>Responsa com telefones/contatos</td></tr>
+      <tr><td>"Quantos data centers temos no sudeste?"</td><td>Responde com a contagem regional</td></tr>
+    </table>
+    <div class="dica">
+      <strong>✅ Se respondeu corretamente, o Charles está funcionando!</strong> Agora vamos deixá-lo visível para os outros.
+    </div>
+  </div>
+</div>
+
+<!-- ================= 10. PASSO 7 - IP ================= -->
+<div class="pagina">
+  <h1 class="secao">10. Passo 7 — Anotar o Endereço (IP) do Computador</h1>
+
+  <p>Para outras pessoas acessarem o Charles, precisamos saber o <strong>endereço do computador na rede</strong> (chamado IP).</p>
+
+  <div class="passo">
+    <span class="passo-num">1</span> <span class="passo-titulo">Abrir o prompt de comando</span>
+    <p>Abra o <strong>cmd</strong> (Menu Iniciar → digite <span style="font-family:Consolas;">cmd</span> → Enter) e digite:</p>
+    <div class="codigo"><span class="prompt">C:\Users\voce></span> <span class="comando">ipconfig</span></div>
+  </div>
+
+  <div class="passo">
+    <span class="passo-num">2</span> <span class="passo-titulo">Localizar o "IPv4"</span>
+    <p>Procure a linha <strong>Endereço IPv4</strong> (normalmente na seção "Adaptador Ethernet" ou "Adaptador de Rede sem Fio").</p>
+    <div class="mockup">
+      <div class="mockup-bar"><span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span><span class="url">Prompt de Comando — ipconfig</span></div>
+      <div class="mockup-body" style="font-family:Consolas; font-size:13px; background:#1e1e1e; color:#d4d4d4;">
+        Adaptador de Rede sem Fio Wi-Fi:<br>
+        &nbsp;&nbsp;Endereço IPv4. . . . . . . . . . . . . : <span style="background:#fff; color:#d13438; font-weight:bold; padding:1px 4px;">192.168.1.50</span><br>
+        &nbsp;&nbsp;Máscara de Sub-rede . . . . . . . . . . : 255.255.255.0<br>
+        &nbsp;&nbsp;Gateway Padrão . . . . . . . . . . . . : 192.168.1.1
+      </div>
+    </div>
+  </div>
+
+  <div class="form-espaco">
+    <div class="linha"><span class="rotulo">🔴 Endereço IP do servidor (ex.: 192.168.1.50):</span><span class="espaco">____ . ____ . ____ . ____</span></div>
+  </div>
+
+  <div class="passo">
+    <span class="passo-num">3</span> <span class="passo-titulo">Montar o endereço do Charles</span>
+    <p>Agora junte o IP + a porta <strong>3000</strong>. O endereço final fica assim:</p>
+    <div class="codigo">http://192.168.1.50:3000</div>
+    <p><strong>Esse é o endereço que você vai colocar no SharePoint.</strong> Guarde-o!</p>
+  </div>
+
+  <div class="passo">
+    <span class="passo-num">4</span> <span class="passo-titulo">Testar em outro computador</span>
+    <p>Em outro computador da mesma rede, abra o navegador e acesse o endereço montado (ex.: <span style="font-family:Consolas;">http://192.168.1.50:3000</span>). Se abrir a tela do Charles, a rede está OK!</p>
+    <div class="atencao">
+      <strong>⚠️ Se NÃO abrir em outro computador, provavelmente o Firewall está bloqueando. Siga o Passo 8.</strong>
+    </div>
+  </div>
+</div>
+
+<!-- ================= 11. PASSO 8 - FIREWALL ================= -->
+<div class="pagina">
+  <h1 class="secao">11. Passo 8 — Liberar a Porta 3000 no Firewall</h1>
+
+  <p>O <strong>Firewall do Windows</strong> bloqueia por padrão. Precisamos permitir a entrada na porta 3000.</p>
+
+  <div class="passo">
+    <span class="passo-num">1</span> <span class="passo-titulo">Abrir o Windows Defender Firewall</span>
+    <p>Menu Iniciar → digite <strong>"Firewall do Windows Defender"</strong> → Enter. No menu à esquerda, clique em <strong>Configurações Avançadas</strong>.</p>
+  </div>
+
+  <div class="passo">
+    <span class="passo-num">2</span> <span class="passo-titulo">Criar Regra de Entrada</span>
+    <p>No painel esquerdo, clique com o botão direito em <strong>Regras de Entrada</strong> → <strong>Nova Regra...</strong></p>
+    <div class="mockup">
+      <div class="mockup-bar"><span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span><span class="url">Firewall do Windows Defender com Segurança Avançada</span></div>
+      <div class="mockup-body" style="font-size:13px;">
+        <div style="display:flex; gap:20px;">
+          <div>
+            ▶ Regras de Entrada<br>
+            ▶ Regras de Saída<br>
+            ▶ Regras de Segurança de Conexão<br>
+            <div style="margin-top:8px; background:#eef4fb; border:1px solid #0078d4; padding:6px 10px; border-radius:4px;">👉 clique aqui e escolha "Nova Regra..."</div>
+          </div>
+          <div style="color:#605e5c; font-size:12px;">Painel do Firewall — opção "Nova Regra..."</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="passo">
+    <span class="passo-num">3</span> <span class="passo-titulo">Preencher o assistente (4 telas)</span>
+    <table>
+      <tr><th>Tela</th><th>O que selecionar</th><th>Exemplo de tela</th></tr>
+      <tr>
+        <td><strong>Tela 1 — Tipo de Regra</strong></td>
+        <td>Marque: <strong>Porta</strong> → Avançar</td>
+        <td rowspan="4" style="width:45%;">
+          <div class="mockup" style="margin:0;">
+            <div class="mockup-bar"><span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span><span class="url">Assistente — Nova Regra</span></div>
+            <div class="mockup-body" style="font-size:12px;">
+              <strong>Tipo de Regra:</strong><br>
+              ⭕ Programa<br>
+              <span style="background:#fff; border:2px solid #0078d4; padding:1px 6px; border-radius:3px;">⭕ Porta</span> ← escolha esta<br>
+              ⭕ Predefinida<br><br>
+              <strong>Protocolo e Portas:</strong><br>
+              Protocolo: <span style="border:1px solid #bdbdbd; padding:1px 6px;">TCP</span><br>
+              Portas: ⭕ <span style="background:#fff; border:2px solid #0078d4; padding:2px 8px; border-radius:3px;">Portas locais específicas: <strong>3000</strong></span><br><br>
+              <strong>Ação:</strong><br>
+              ⭕ Permitir a conexão ← escolha esta<br><br>
+              <strong>Perfil:</strong><br>
+              ☑ Domínio &nbsp; ☑ Particular &nbsp; ☑ Público<br><br>
+              <strong>Nome:</strong><br>
+              <span style="background:#f3f2f1; border:1px solid #bdbdbd; padding:3px 8px; width:220px; display:inline-block;">Charles Chatbot 3000</span>
+            </div>
+          </div>
+        </td>
+      </tr>
+      <tr><td><strong>Tela 2 — Protocolo e Portas</strong></td><td>Protocolo: <strong>TCP</strong> · Marque "Portas locais específicas" e digite: <strong>3000</strong></td></tr>
+      <tr><td><strong>Tela 3 — Ação</strong></td><td>Marque: <strong>Permitir a conexão</strong></td></tr>
+      <tr><td><strong>Tela 4 — Perfil e Nome</strong></td><td>Deixe os 3 perfis marcados. Nome: <strong>Charles Chatbot 3000</strong> → Concluir</td></tr>
+    </table>
+    <div class="dica">
+      <strong>💡 Pronto!</strong> Agora teste novamente em outro computador: <span style="font-family:Consolas;">http://SEU-IP:3000</span> deve abrir.
+    </div>
+  </div>
+</div>
+
+<!-- ================= 12. PASSO 9 - SHAREPOINT ================= -->
+<div class="pagina">
+  <h1 class="secao">12. Passo 9 — Colocar o Charles no SharePoint</h1>
+
+  <p>Agora a parte final e mais gratificante: embutir o Charles numa página do SharePoint usando a Web Part <strong>"Incorporar"</strong>.</p>
+
+  <div class="passo">
+    <span class="passo-num">1</span> <span class="passo-titulo">Abrir o site do SharePoint</span>
+    <p>No navegador, abra o site do SharePoint da Claro com seu usuário corporativo. Você precisa ter <strong>permissão de edição</strong> (normalmente aparece o botão "Editar" na página).</p>
+  </div>
+
+  <div class="passo">
+    <span class="passo-num">2</span> <span class="passo-titulo">Entrar no modo de edição</span>
+    <p>Na página onde você quer o Charles, clique no botão <strong>Editar</strong> (canto superior direito).</p>
+    <div class="mockup">
+      <div class="mockup-bar"><span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span><span class="url">Página do SharePoint — modo leitura</span></div>
+      <div class="mockup-body">
+        <div class="sp-header">🏢 Site Data Center Claro &nbsp;|&nbsp; Página Inicial</div>
+        <div class="sp-nav">
+          <span class="ativo">Página Inicial</span><span>Documentos</span><span>Equipe</span><span>Notícias</span>
+          <span style="margin-left:auto; background:#107c10; color:#fff; border-radius:4px; padding:3px 14px;">Editar ⚙️</span>
+        </div>
+        <div style="font-size:13px; color:#a19f9d; text-align:center; padding:20px;">⬅️ Clique no botão azul/verde "Editar" no canto superior direito</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="passo">
+    <span class="passo-num">3</span> <span class="passo-titulo">Inserir a Web Part "Incorporar"</span>
+    <p>No modo de edição, existem duas formas de fazer isso:</p>
+    <ul>
+      <li><strong>Forma rápida:</strong> clique no botão <strong>➕</strong> (Adicionar novas Web Parts) dentro da página, busque por <strong>"Incorporar"</strong> e clique para adicionar.</li>
+      <li><strong>Alternativa via menu:</strong> aba <strong>Inserir</strong> (na faixa de opções) → <strong>Web Parts</strong> → categoria <strong>Mídia e Conteúdo</strong> → <strong>Incorporação (Embed)</strong>.</li>
+    </ul>
+    <div class="mockup">
+      <div class="mockup-bar"><span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span><span class="url">Página do SharePoint — modo edição</span></div>
+      <div class="mockup-body">
+        <div class="sp-header">🏢 Site Data Center Claro &nbsp;|&nbsp; Página Inicial (Edição)</div>
+        <div class="sp-nav">
+          <span class="ativo">Página Inicial</span><span>Documentos</span>
+          <span style="background:#0078d4; color:#fff; border-radius:3px; padding:2px 8px;">Inserir</span>
+          <span style="margin-left:auto;">✔ Salvar &nbsp; ✖ Sair</span>
+        </div>
+        <div style="padding:18px;">
+          <div style="display:flex; gap:14px; align-items:center; border:2px dashed #0078d4; border-radius:8px; padding:14px;">
+            <span style="font-size:30px;">➕</span>
+            <div>
+              <strong>Adicionar novas Web Parts</strong><br>
+              <span style="font-size:12px; color:#605e5c;">Clique aqui e pesquise por <strong>"Incorporar"</strong></span>
+            </div>
+          </div>
+          <div style="font-size:12px; color:#a19f9d; margin-top:8px;">⬅️ O quadrado pontilhado é onde a Web Part será adicionada</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="passo">
+    <span class="passo-num">4</span> <span class="passo-titulo">Colar o endereço do Charles no campo da Web Part</span>
+    <p>Quando a Web Part "Incorporar" aparecer, haverá um campo com o símbolo <strong></></strong> ou <strong>localizador</strong>. Você deve clicar no botão <strong>"</></> Editar origem</strong>" da Web Part e colar o seguinte bloco (troque o endereço pelo IP do seu computador):</p>
+    <div class="codigo"><iframe
+  src="http://SEU-IP:3000"
+  width="100%"
+  height="600"
+  style="border:0;"
+  allow="microphone;"
+  title="Charles - Assistente Virtual"
+></iframe></div>
+    <div class="mockup">
+      <div class="mockup-bar"><span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span><span class="url">Web Part Incorporar — propriedades</span></div>
+      <div class="mockup-body">
+        <div class="card-bnb">
+          <div class="card-bnb-head">Incorporar</div>
+          <div class="card-bnb-body">
+            <label style="font-weight:600; font-size:13px;">Endereço da Web / Link</label>
+            <div class="campo-sim" style="font-family:Consolas; background:#fff;">https://... (localizador de conteúdo)</div>
+            <div style="margin:10px 0; text-align:center; color:#0078d4;">ou</div>
+            <label style="font-weight:600; font-size:13px;">Código de inserção (Embed code)</label>
+            <div class="campo-sim" style="font-family:Consolas; background:#1e1e1e; color:#d4d4d4; font-size:12px; white-space:pre-wrap;"><iframe src="http://192.168.1.50:3000" width="100%" height="600" ... ></iframe></div>
+            <div style="margin-top:10px; text-align:right;">
+              <span class="btn-sim verde">Aplicar</span>
+            </div>
+            <div style="font-size:12px; color:#a19f9d; margin-top:8px;">⬅️ Exemplo: cole o código do iframe e clique em "Aplicar"</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="atencao">
+      <strong>⚠️ IMPORTANTE:</strong> Troque <span style="font-family:Consolas;">SEU-IP</span> pelo IP que você anotou no Passo 7 (ex.: <span style="font-family:Consolas;">192.168.1.50</span>). O endereço dentro das aspas de <span style="font-family:Consolas;">src="..."</span> tem que ser <strong>exatamente</strong>: <span style="font-family:Consolas;">http://SEU-IP:3000</span>
+    </div>
+  </div>
+
+  <div class="passo">
+    <span class="passo-num">5</span> <span class="passo-titulo">Publicar a página</span>
+    <p>Depois de aplicar, clique em <strong>Publicar</strong> (ou Salvar e Fechar) no canto superior direito da página.</p>
+    <div class="mockup">
+      <div class="mockup-bar"><span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span><span class="url">Página do SharePoint — publicação</span></div>
+      <div class="mockup-body">
+        <div class="sp-header">🏢 Site Data Center Claro &nbsp;|&nbsp; Página Inicial (Edição)</div>
+        <div class="sp-body center">
+          <div style="border:2px solid #e1dfdd; border-radius:6px; padding:20px; max-width:520px; margin:0 auto; background:#faf9f8;">
+            <div style="font-weight:600; margin-bottom:12px;">📄 Você está editando a página</div>
+            <div style="display:flex; gap:10px; justify-content:center;">
+              <span style="background:#e1dfdd; color:#333; padding:8px 18px; border-radius:4px; font-size:13px;">Sair do modo de edição</span>
+              <span style="background:#107c10; color:#fff; padding:8px 18px; border-radius:4px; font-size:13px; font-weight:600;">Publicar</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dica">
+    <strong>🎉 PARABÉNS!</strong> Se tudo deu certo, ao abrir a página do SharePoint, o Charles estará aparecendo dentro da página, pronto para conversar!
+  </div>
+</div>
+
+<!-- ================= 13. PASSO 10 - TAMANHO ================= -->
+<div class="pagina">
+  <h1 class="secao">13. Passo 10 — Ajustar o Tamanho do Quadro</h1>
+
+  <p>Se o Charles aparecer <strong>muito pequeno</strong>, <strong>muito grande</strong> ou com <strong>barras de rolagem</strong>, ajuste os números do código do iframe.</p>
+
+  <div class="passo">
+    <span class="passo-num">1</span> <span class="passo-titulo">Voltar a editar a página</span>
+    <p>Clique em <strong>Editar</strong> novamente e depois clique <strong>em cima do quadro do Charles</strong> → botão de <strong>lápis</strong> (editar Web Part).</p>
+  </div>
+
+  <div class="passo">
+    <span class="passo-num">2</span> <span class="passo-titulo">Alterar as medidas</span>
+    <p>No código, altere estas duas partes e clique em <strong>Aplicar</strong> e <strong>Publicar</strong> novamente:</p>
+    <table>
+      <tr><th>Parte do código</th><th>O que faz</th><th>Valores sugeridos</th></tr>
+      <tr><td style="font-family:Consolas;">width="100%"</td><td>Largura do quadro</td><td>100% (ocupa toda a largura da coluna)</td></tr>
+      <tr><td style="font-family:Consolas;">height="600"</td><td>Altura em pixels</td><td>450 (quadro menor) · 600 (padrão) · 800 (tela cheia)</td></tr>
+    </table>
+    <div class="mockup">
+      <div class="mockup-body center">
+        <div style="display:flex; align-items:flex-end; justify-content:center; gap:14px; flex-wrap:wrap;">
+          <div>
+            <div style="font-size:12px; color:#605e5c;">height="450"</div>
+            <div style="width:110px; height:60px; border:2px solid #0078d4; border-radius:4px; background:#eef4fb; display:flex; align-items:center; justify-content:center; font-size:11px;">🤖 Charles</div>
+          </div>
+          <div>
+            <div style="font-size:12px; color:#605e5c;">height="600" ← padrão</div>
+            <div style="width:130px; height:80px; border:2px solid #107c10; border-radius:4px; background:#e8f5e9; display:flex; align-items:center; justify-content:center; font-size:11px;">🤖 Charles</div>
+          </div>
+          <div>
+            <div style="font-size:12px; color:#605e5c;">height="800"</div>
+            <div style="width:150px; height:105px; border:2px solid #d13438; border-radius:4px; background:#fdecec; display:flex; align-items:center; justify-content:center; font-size:11px;">🤖 Charles</div>
+          </div>
+        </div>
+        <div style="font-size:12px; color:#a19f9d; margin-top:8px;">⬆️ Escolha a altura que fica melhor na sua página</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="info">
+    <strong>ℹ️ Dica de voz:</strong> O Charles usa o microfone do navegador (Web Speech API). Se o usuário permitir, ele pode falar e ouvir dentro do SharePoint também.
+  </div>
+</div>
+
+<!-- ================= 14. FORMULÁRIO ================= -->
+<div class="pagina">
+  <h1 class="secao">14. Formulário de Preenchimento Rápido</h1>
+  <p>Use esta página como "folha de consulta" enquanto executa o guia. Preencha com seus dados:</p>
+
+  <div class="form-espaco">
+    <h3>📋 Dados do Servidor</h3>
+    <div class="linha"><span class="rotulo">Nome do computador:</span><span class="espaco">__________</span></div>
+    <div class="linha"><span class="rotulo">Caminho da pasta do projeto:</span><span class="espaco">C:\__________\chatonus</span></div>
+    <div class="linha"><span class="rotulo">IP do computador (Passo 7):</span><span class="espaco">____ . ____ . ____ . ____</span></div>
+    <div class="linha"><span class="rotulo">Porta:</span><span class="espaco">3000</span></div>
+  </div>
+
+  <div class="form-espaco">
+    <h3>🔗 Endereço do Charles (para o SharePoint)</h3>
+    <div class="linha"><span class="rotulo">URL completa:</span><span class="espaco">http://____ . ____ . ____ . ____:3000</span></div>
+  </div>
+
+  <div class="form-espaco">
+    <h3>🔑 Chaves de API</h3>
+    <div class="linha"><span class="rotulo">Groq (gsk_...):</span><span class="espaco">gsk___________________________</span></div>
+    <div class="linha"><span class="rotulo">OpenRouter (opcional):</span><span class="espaco">sk-or-________________________</span></div>
+    <div class="linha"><span class="rotulo">Gemini (opcional):</span><span class="espaco">AIza__________________________</span></div>
+  </div>
+
+  <div class="form-espaco">
+    <h3>🏢 SharePoint</h3>
+    <div class="linha"><span class="rotulo">Endereço do site:</span><span class="espaco">https://________________.sharepoint.com</span></div>
+    <div class="linha"><span class="rotulo">Página onde colocar o Charles:</span><span class="espaco">____________________________</span></div>
+    <div class="linha"><span class="rotulo">Altura do iframe escolhida:</span><span class="espaco">☐ 450 &nbsp; ☐ 600 &nbsp; ☐ 800</span></div>
+  </div>
+
+  <div class="form-espaco">
+    <h3>🧪 Comandos Rápidos</h3>
+    <div class="linha"><span class="rotulo">Instalar dependências:</span><span class="espaco">cd backend && npm install</span></div>
+    <div class="linha"><span class="rotulo">Ligar o Charles:</span><span class="espaco">npm start</span></div>
+    <div class="linha"><span class="rotulo">Testar local:</span><span class="espaco">http://localhost:3000</span></div>
+    <div class="linha"><span class="rotulo">Ver IP:</span><span class="espaco">ipconfig</span></div>
+  </div>
+</div>
+
+<!-- ================= 15. PROBLEMAS COMUNS ================= -->
+<div class="pagina">
+  <h1 class="secao">15. Problemas Comuns e Como Resolver</h1>
+
+  <table>
+    <tr><th style="width:35%">Problema</th><th>Causa provável</th><th>Solução</th></tr>
+    <tr>
+      <td><strong>"localhost" abre, mas outro computador não abre</strong></td>
+      <td>Firewall bloqueando ou IP errado</td>
+      <td>Refaça o Passo 8 (liberar porta 3000). Confira se digitou <span style="font-family:Consolas;">http://IP:3000</span></td>
+    </tr>
+    <tr>
+      <td><strong>Terminal fecha e o Charles desliga</strong></td>
+      <td>A janela do cmd foi fechada</td>
+      <td>Mantenha o terminal aberto. Para desligar: pressione <strong>Ctrl+C</strong> na janela</td>
+    </tr>
+    <tr>
+      <td><strong>Resposta sem IA (só FAQ)</strong></td>
+      <td>Chave do Groq vazia/errada</td>
+      <td>Confira o arquivo <span style="font-family:Consolas;">.env</span>: <span style="font-family:Consolas;">GROQ_API_KEY=gsk_...</span>. Depois reinicie com Ctrl+C e <span style="font-family:Consolas;">npm start</span></td>
+    </tr>
+    <tr>
+      <td><strong>Página em branco no SharePoint</strong></td>
+      <td>Endereço errado no iframe ou servidor desligado</td>
+      <td>Confira se o endereço em <span style="font-family:Consolas;">src="..."</span> abre no navegador. Confira se o terminal ainda está rodando</td>
+    </tr>
+    <tr>
+      <td><strong>Notificação "site bloqueado pelo SharePoint"</strong></td>
+      <td>Permissão de incorporação do site</td>
+      <td>Fale com o administrador do SharePoint para liberar incorporação de sites da rede interna</td>
+    </tr>
+    <tr>
+      <td><strong>Microfone não funciona no SharePoint</strong></td>
+      <td>Permissão do navegador negada</td>
+      <td>Clique no cadeado 🔒 da barra de endereço → permitir microfone</td>
+    </tr>
+    <tr>
+      <td><strong>"porta 3000 já está em uso"</strong></td>
+      <td>Outro Charles já rodando</td>
+      <td>Feche o outro terminal ou mude a porta no <span style="font-family:Consolas;">.env</span> (ex.: 3001) e ajuste o iframe</td>
+    </tr>
+    <tr>
+      <td><strong>Resposta demorando / "servidor ocupado"</strong></td>
+      <td>API do Groq lenta ou limite atingido</td>
+      <td>Aguarde e tente de novo. Confira o status em <span style="font-family:Consolas;">http://IP:3000/api/status</span></td>
+    </tr>
+  </table>
+
+  <div class="info">
+    <strong>ℹ️ Teste de diagnóstico rápido:</strong> em qualquer computador, abra <span style="font-family:Consolas;">http://SEU-IP:3000/api/status</span>. Se aparecer um texto com <strong>"online"</strong>, o Charles está no ar e o problema está no SharePoint.
+  </div>
+</div>
+
+<!-- ================= 16. CHECKLIST ================= -->
+<div class="pagina">
+  <h1 class="secao">16. Checklist Final</h1>
+  <p>Marque cada item quando concluir:</p>
+
+  <div class="check-item"><div class="check-box"></div><div><strong>Passo 1:</strong> Node.js instalado (<span style="font-family:Consolas;">node --version</span> mostra v20+)</div></div>
+  <div class="check-item"><div class="check-box"></div><div><strong>Passo 2:</strong> Pasta <span style="font-family:Consolas;">chatonus</span> completa no computador servidor</div></div>
+  <div class="check-item"><div class="check-box"></div><div><strong>Passo 3:</strong> Chave <span style="font-family:Consolas;">GROQ_API_KEY</span> preenchida no <span style="font-family:Consolas;">.env</span></div></div>
+  <div class="check-item"><div class="check-box"></div><div><strong>Passo 4:</strong> <span style="font-family:Consolas;">npm install</span> terminou com "added X packages"</div></div>
+  <div class="check-item"><div class="check-box"></div><div><strong>Passo 5:</strong> Terminal mostra "Servidor rodando em http://localhost:3000"</div></div>
+  <div class="check-item"><div class="check-box"></div><div><strong>Passo 6:</strong> Charles respondeu a um teste no navegador</div></div>
+  <div class="check-item"><div class="check-box"></div><div><strong>Passo 7:</strong> Anotei o IP (ex.: 192.168.1.50)</div></div>
+  <div class="check-item"><div class="check-box"></div><div><strong>Passo 8:</strong> Firewall liberado na porta 3000 (TCP)</div></div>
+  <div class="check-item"><div class="check-box"></div><div><strong>Passo 8b:</strong> Testei <span style="font-family:Consolas;">http://IP:3000</span> em outro computador da rede</div></div>
+  <div class="check-item"><div class="check-box"></div><div><strong>Passo 9:</strong> Web Part "Incorporar" criada na página do SharePoint</div></div>
+  <div class="check-item"><div class="check-box"></div><div><strong>Passo 9b:</strong> Colei o iframe com <span style="font-family:Consolas;">src="http://IP:3000"</span></div></div>
+  <div class="check-item"><div class="check-box"></div><div><strong>Passo 9c:</strong> Página publicada</div></div>
+  <div class="check-item"><div class="check-box"></div><div><strong>Passo 10:</strong> Tamanho do quadro ajustado (altura escolhida)</div></div>
+  <div class="check-item"><div class="check-box"></div><div><strong>🎉</strong> Charles funcionando dentro do SharePoint!</div></div>
+
+  <div class="dica mt20">
+    <strong>🎊 Missão cumprida!</strong> O Charles agora está no SharePoint da sua equipe. Quando quiser que ele aprenda mais coisas, basta alimentar o FAQ e os documentos do RAG — mas isso é assunto para outro guia.
+  </div>
+
+  <div class="rodape-pagina">
+    Guia elaborado para o Chatbot Charles · Departamento de Data Center · Claro Empresas<br>
+    Versão 1.0 — 04/08/2026 — Passo a passo para iniciantes
+  </div>
+</div>
+
+</body>
+</html>

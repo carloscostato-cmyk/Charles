@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+backend/node_modules/
+
+# Environment and credentials
+.env
+.env.*
+!.env.example
+
+# Runtime data and SQLite artifacts
+*.db
+*.db-shm
+*.db-wal
+
+# Logs and test reports
+*.log
+coverage/
+backend/coverage/
+
+# Local editor and OS files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Generated archives and temporary files
+*.zip
+*.tmp

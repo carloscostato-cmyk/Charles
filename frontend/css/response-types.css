@@ -1,0 +1,165 @@
+/* Response Type Formatting */
+
+/* Endereço - Box destacado com ícone de localização */
+.caixa-endereco {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 16px;
+  border-radius: 12px;
+  margin: 8px 0;
+  border-left: 5px solid #764ba2;
+  font-family: 'Courier New', monospace;
+}
+
+.caixa-endereco::before {
+  content: "📍 ";
+  font-size: 1.2em;
+  margin-right: 8px;
+}
+
+.endereco-linha {
+  margin: 8px 0;
+  line-height: 1.6;
+  font-size: 0.95em;
+}
+
+.endereco-linha strong {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.complemento {
+  font-size: 0.9em;
+  opacity: 0.9;
+  font-style: italic;
+}
+
+/* Telefone - Box com fonte monoespacada */
+.caixa-telefone {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+  padding: 14px;
+  border-radius: 12px;
+  margin: 8px 0;
+  border-left: 5px solid #f5576c;
+  font-family: 'Courier New', monospace;
+  font-size: 1.1em;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+.caixa-telefone::before {
+  content: "☎️ ";
+  margin-right: 8px;
+  font-size: 1.2em;
+}
+
+/* Informação/Listagem */
+.caixa-informacao {
+  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+  color: #333;
+  padding: 14px;
+  border-radius: 12px;
+  margin: 8px 0;
+  border-left: 5px solid #fed6e3;
+}
+
+.caixa-informacao::before {
+  content: "ℹ️ ";
+  margin-right: 8px;
+}
+
+.caixa-informacao ol,
+.caixa-informacao ul {
+  margin: 8px 0 8px 20px;
+  padding: 0;
+}
+
+.caixa-informacao li {
+  margin: 4px 0;
+  line-height: 1.5;
+}
+
+/* Instrução/Procedimento */
+.caixa-instrucao {
+  background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+  color: #333;
+  padding: 14px;
+  border-radius: 12px;
+  margin: 8px 0;
+  border-left: 5px solid #fdcb6e;
+}
+
+.caixa-instrucao::before {
+  content: "📋 ";
+  margin-right: 8px;
+}
+
+.caixa-instrucao ol {
+  margin: 8px 0 8px 20px;
+  padding: 0;
+}
+
+.caixa-instrucao li {
+  margin: 8px 0;
+  line-height: 1.6;
+}
+
+/* Conversação normal */
+.caixa-conversacao {
+  background: #f0f0f0;
+  color: #333;
+  padding: 12px;
+  border-radius: 12px;
+  margin: 8px 0;
+  border-left: 5px solid #ddd;
+}
+
+.caixa-conversacao::before {
+  content: "💬 ";
+  margin-right: 8px;
+}
+
+/* Indicador de "não será falado" */
+.nao-sera-falado {
+  opacity: 0.8;
+  font-style: italic;
+}
+
+.nao-sera-falado::after {
+  content: " 🔇";
+  font-size: 0.9em;
+  margin-left: 4px;
+}
+
+/* Badge de tipo de resposta */
+.badge-tipo-resposta {
+  display: inline-block;
+  font-size: 0.75em;
+  padding: 4px 8px;
+  border-radius: 4px;
+  margin-top: 8px;
+  background: rgba(0,0,0,0.1);
+  color: #666;
+  font-weight: bold;
+}
+
+/* Mobile responsivo */
+@media (max-width: 600px) {
+  .caixa-endereco,
+  .caixa-telefone,
+  .caixa-informacao,
+  .caixa-instrucao {
+    padding: 12px;
+    font-size: 0.95em;
+  }
+
+  .endereco-linha {
+    font-size: 0.9em;
+  }
+
+  .caixa-telefone {
+    font-size: 1em;
+  }
+}

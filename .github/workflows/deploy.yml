@@ -1,0 +1,57 @@
+name: Deploy Charles v3.0
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: 'backend/package-lock.json'
+      
+      - name: Instalar dependências
+        run: |
+          cd backend
+          npm ci
+      
+      - name: 🧪 Rodar testes
+        run: |
+          cd backend
+          npm run test:ci
+      
+      - name: 🛡️ Verificar guardiões
+        run: |
+          npm run guardians:check
+      
+      - name: 📤 Upload cobertura
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./backend/coverage/coverage-final.json
+          flags: unittests
+      
+      - name: 🐳 Build Docker
+        if: github.ref == 'refs/heads/main'
+        run: |
+          docker build -t charles-chatbot:v3.0 .
+          docker tag charles-chatbot:v3.0 charles-chatbot:latest
+      
+      - name: ✅ Deploy bem-sucedido
+        if: github.ref == 'refs/heads/main'
+        run: |
+          echo "✅ Charles v3.0 pronto para deploy!"
+          echo "Versão: 3.0.0"
+          echo "Data: $(date)"

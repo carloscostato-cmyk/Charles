@@ -1,0 +1,32 @@
+[
+  {
+    "id": "1-1",
+    "tipo": "interacao",
+    "pergunta": "Test question 1",
+    "resposta": "Test answer 1",
+    "metadados": {},
+    "embedding": null,
+    "timestamp": "2026-08-14T14:23:24.863Z"
+  },
+  {
+    "id": "1-2",
+    "tipo": "interacao",
+    "pergunta": "Sobre energia e backup dos datacenters",
+    "resposta": "Configuramos N+1 com UPS e geradores",
+    "metadados": {},
+    "embedding": null,
+    "timestamp": "2026-08-14T14:23:24.870Z"
+  },
+  {
+    "id": "1-1",
+    "tipo": "interacao",
+    "pergunta": "teste",
+    "resposta": "Não tenho essa informação na base de conhecimento, mas posso te ajudar com outros tópicos sobre Data Center Claro. Qual seria sua pergunta?",
+    "metadados": {
+      "fonte": "rag+llm",
+      "qualidade": 100
+    },
+    "embedding": null,
+    "timestamp": "2026-08-14T16:44:47.703Z"
+  }
+]

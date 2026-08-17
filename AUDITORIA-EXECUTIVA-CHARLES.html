@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Auditoria Executiva - Charles</title>
+</head>
+<body>
+  <div class="auditoria-content">
+    <h1>Charles - Assistente Virtual com Sincronização Labial</h1>
+    
+    <section id="introducao">
+      <h2>Introdução</h2>
+      <p>Charles é um assistente virtual corporativo desenvolvido pela Claro Empresas para o Departamento de Data Center. Este documento descreve as funcionalidades multimodais do sistema, incluindo a nova funcionalidade de sincronização labial (lip-sync).</p>
+    </section>
+    
+    <section id="recursos-gerais">
+      <h2>Recursos Gerais</h2>
+      <ul>
+        <li>Sintese de fala (Text-to-Speech) usando Web Speech API nativa</li>
+        <li>Reconhecimento de voz (Speech-to-Text)</li>
+        <li>Integração com RAG (Retrieval Augmented Generation)</li>
+        <li>Streaming de respostas token-by-token via SSE</li>
+        <li>**Sincronização labial (Lip-sync)** - Nova funcionalidade</li>
+      </ul>
+    </section>
+    
+    <section id="lip-sync">
+      <h2>Sincronização Labial (Lip-sync)</h2>
+      <p>A funcionalidade de sincronização labial faz com que o avatar do Charles mova seus "lábios" (visemes) em sincronia com a fala gerada pelo sistema de TTS (Text-to-Speech). Isso cria uma experiência mais natural e humana, onde o movimento da boca corresponde aos fonemas sendo pronunciados.</p>
+      
+      <h3>Como funciona:</h3>
+      <ol>
+        <li>Quando o Charles começa a falar, o sistema TTS dispara um evento <code>tts:start</code></li>
+        <li>O frontend processa o texto gerado, mapeando cada fonema para uma forma de boca (viseme)</li>
+        <li>19 elementos visuais no avatar representam diferentes configurações de boca:</li>
+        <ul>
+          <li><strong>Fonemas abertos:</strong> a, e, i, o, u</li>
+          <li><strong>Fonemas fechados:</strong> m, n, l, s, r</li>
+          <li><strong>Fonemas labiais:</strong> f, v, b, p</li>
+          <li><strong>Fonemas complexos:</strong> sh, ch, lh, nh, j, g, k</li>
+        </ul>
+        <li>Cada viseme é exibido por 30ms, criando uma animação sequencial suave</li>
+        <li>Quando o TTS termina, o evento <code>tts:end</code> limpa todos os visemes</li>
+      </ol>
+      
+      <h3>Fonemas Suportados:</h3>
+      <table>
+        <tr>
+          <th>Fonema</th>
+          <th>Viseme</th>
+          <th>Descrição</th>
+        </tr>
+        <tr>
+          <td>'a'</td>
+          <td>mouth-viseme-a</td>
+          <td>Abertura ampla da boca</td>
+        </tr>
+        <tr>
+          <td>'e'</td>
+          <td>mouth-viseme-e</td>
+          <td>Média abertura, língua avançada</td>
+        </tr>
+        <tr>
+          <td>'i'</td>
+          <td>mouth-viseme-i</td>
+          <td>Boca quase fechada, sorriso</td>
+        </tr>
+        <tr>
+          <td>'o'</td>
+          <td>mouth-viseme-o</td>
+          <td>Boca redonda</td>
+        </tr>
+        <tr>
+          <td>'u'</td>
+          <td>mouth-viseme-u</td>
+          <td>Boc circular para som nasal</td>
+        </tr>
+        <tr>
+          <td>'m', 'p'</td>
+          <td>mouth-viseme-m</td>
+          <td>Lábios fechados, som nasal/bilabial</td>
+        </tr>
+        <tr>
+          <td>'f', 'v'</td>
+          <td>mouth-viseme-f</td>
+          <td>Lábios levemente separados, dentais</td>
+        </tr>
+        <tr>
+          <td>'s', 'z'</td>
+          <td>mouth-viseme-s</td>
+          <td>Língua próxima ao palato, sibilante</td>
+        </tr>
+        <tr>
+          <td>'sh'</td>
+          <td>mouth-viseme-sh</td>
+          <td>Sibilante postalveolar (ch like em "shoe")</td>
+        </tr>
+        <tr>
+          <td>'ch'</td>
+          <td>mouth-viseme-ch</td>
+          <td>Africativa postalveolar</td>
+        </tr>
+        <tr>
+          <td>'j'</td>
+          <td>mouth-viseme-j</td>
+          <td>Som de "dj" como em "joio"</td>
+        </tr>
+        <tr>
+          <td>'r'</td>
+          <td>mouth-viseme-r</td>
+          <td>Rolado ou approximante alveolar</td>
+        </tr>
+        <tr>
+          <td>'l', 'n'</td>
+          <td>mouth-viseme-l</td>
+          <td>Lateral ou nasal</td>
+        </tr>
+        <tr>
+          <td>'g', 'k'</td>
+          <td>mouth-viseme-g</td>
+          <td>Parada velar, fundo da boca</td>
+        </tr>
+      </table>
+      
+      <h3>Integração com TTS:</h3>
+      <p>O lip-sync está integrado ao módulo de síntese de fala em <strong>frontend/js/voice.js</strong>. O sistema dispatches os seguintes eventos CustomEvent:</p>
+      <ul>
+        <li><code>tts:start</code> - Dispatchado quando a fala começa</li>
+        <li><code>tts:end</code> - Dispatchado quando a fala termina</li>
+        <li><code>tts:error</code> - Dispatchado em caso de erro na síntese</li>
+      </ul>
+      <p>No <strong>frontend/js/app.js</strong>, listeners capturam esses eventos e controlam a animação dos visemes correspondente.</p>
+    </section>
+    
+    <section id="beneficios">
+      <h2>Benefícios da Sincronização Labial</h2>
+      <ul>
+        <li>Experiência mais envolvente e natural para o usuário</li>
+        <li>Melhor compreensão da entonação e ritmo da fala</li>
+        <li>Acessibilidade aprimorada para usuários com deficiência auditiva (feedback visual)</li>
+        <li>Professional appearance for corporate communications</li>
+        <li>Feedback visual que confirma que o sistema está "falando"</li>
+      </ul>
+    </section>
+    
+    <section id="configuracao">
+      <h2>Configuração</h2>
+      <p>A sincronização labial está habilitada por padrão e requer:</p>
+      <ul>
+        <li>Navegador compatível com Web Speech API (Chrome, Edge)</li>
+        <li>Voices disponíveis no sistema (já configurado no VoiceSynthesis class)</li>
+        <li>Nenhuma chave de API externa - usa a API nativa do navegador</li>
+      </ul>
+    </section>
+    
+    <footer>
+      <p>Charles - Departamento de Data Center - Claro Empresas | 2026</p>
+    </footer>
+  </div>
+</body>
+</html>

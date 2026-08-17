@@ -1,0 +1,494 @@
+<![CDATA[<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Data Center SD – Home | Charles Assistente Virtual</title>
+
+  <!-- ===== CSS DO CHATBOT ===== -->
+  <link rel="stylesheet" href="frontend/css/style.css">
+
+  <!-- ===== CSS ESPECÍFICO DO WRAPPER (chatbot sobre Data Center) ===== -->
+  <style>
+    /* Reset base para a página ficar limpa e branca */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #ffffff;
+      font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+    }
+
+    body {
+      background: #ffffff;
+    }
+
+    /* ===== BOTÃO FLUTUANTE PARA ABRIR/FECHAR O CHAT ===== */
+    #chatToggleBtn {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #e3262e, #cc232b);
+      border: none;
+      cursor: pointer;
+      z-index: 10000;
+      box-shadow: 0 4px 20px rgba(227, 38, 46, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      animation: pulseGlow 2.5s ease-in-out infinite;
+    }
+
+    #chatToggleBtn:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 28px rgba(227, 38, 46, 0.6);
+    }
+
+    #chatToggleBtn:active {
+      transform: scale(0.95);
+    }
+
+    #chatToggleBtn svg {
+      width: 32px;
+      height: 32px;
+      fill: #ffffff;
+    }
+
+    #chatToggleBtn .close-icon {
+      display: none;
+    }
+
+    #chatToggleBtn.open .chat-icon {
+      display: none;
+    }
+
+    #chatToggleBtn.open .close-icon {
+      display: block;
+    }
+
+    /* Animação de pulso para destacar o botão */
+    @keyframes pulseGlow {
+      0%, 100% {
+        box-shadow: 0 4px 20px rgba(227, 38, 46, 0.4), 0 0 0 0 rgba(227, 38, 46, 0.3);
+      }
+      50% {
+        box-shadow: 0 4px 20px rgba(227, 38, 46, 0.4), 0 0 0 12px rgba(227, 38, 46, 0);
+      }
+    }
+
+    /* ===== NOTIFICAÇÃO "BALÃO" NO BOTÃO ===== */
+    #chatToggleBtn .notification-badge {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #ffffff;
+      color: #e3262e;
+      font-size: 12px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+      display: none;
+    }
+
+    #chatToggleBtn .notification-badge.show {
+      display: flex;
+      animation: bounce 0.5s ease;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.3); }
+    }
+
+    /* ===== TOOLTIP DO BOTÃO ===== */
+    #chatToggleBtn .tooltip {
+      position: absolute;
+      right: 76px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    #chatToggleBtn .tooltip::after {
+      content: '';
+      position: absolute;
+      right: -6px;
+      top: 50%;
+      transform: translateY(-50%);
+      border-left: 6px solid #333;
+      border-top: 6px solid transparent;
+      border-bottom: 6px solid transparent;
+    }
+
+    #chatToggleBtn:hover .tooltip {
+      opacity: 1;
+    }
+
+    /* ===== OVERLAY DO CHATBOT (TELA LIMPA) ===== */
+    .app-wrapper {
+      z-index: 10001 !important;
+    }
+
+    /* Estado minimizado: esconde o app-wrapper mas mantém o botão */
+    .app-wrapper.minimized {
+      display: none !important;
+    }
+
+    /* ===== INDICADOR DE BOAS-VINDAS (BALÃO DE CHAT) ===== */
+    #welcomeBubble {
+      position: fixed;
+      bottom: 100px;
+      right: 24px;
+      max-width: 280px;
+      background: #ffffff;
+      border-radius: 16px 16px 4px 16px;
+      padding: 16px 20px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+      z-index: 10000;
+      font-size: 14px;
+      color: #333;
+      line-height: 1.5;
+      opacity: 0;
+      transform: translateY(20px) scale(0.9);
+      pointer-events: none;
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+
+    #welcomeBubble.show {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
+      cursor: pointer;
+    }
+
+    #welcomeBubble .bubble-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    #welcomeBubble .bubble-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #e3262e, #cc232b);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    #welcomeBubble .bubble-title {
+      font-weight: 600;
+      color: #e3262e;
+      font-size: 15px;
+    }
+
+    #welcomeBubble .bubble-text {
+      color: #555;
+      font-size: 13px;
+    }
+
+    #welcomeBubble .bubble-close {
+      position: absolute;
+      top: 8px;
+      right: 10px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 18px;
+      color: #999;
+      line-height: 1;
+      padding: 2px;
+    }
+
+    #welcomeBubble .bubble-close:hover {
+      color: #333;
+    }
+
+    /* ===== RESPONSIVO ===== */
+    @media (max-width: 768px) {
+      #chatToggleBtn {
+        bottom: 16px;
+        right: 16px;
+        width: 56px;
+        height: 56px;
+      }
+
+      #chatToggleBtn svg {
+        width: 28px;
+        height: 28px;
+      }
+
+      #welcomeBubble {
+        bottom: 84px;
+        right: 16px;
+        max-width: calc(100vw - 32px);
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- ================================================================ -->
+  <!-- BALÃO DE BOAS-VINDAS (aparece após alguns segundos)              -->
+  <!-- ================================================================ -->
+  <div id="welcomeBubble">
+    <button class="bubble-close" onclick="dismissWelcomeBubble()" aria-label="Fechar">×</button>
+    <div class="bubble-header">
+      <div class="bubble-avatar">🤖</div>
+      <div class="bubble-title">Charles</div>
+    </div>
+    <div class="bubble-text">
+      Olá! Sou o Charles, seu assistente virtual do Data Center.
+      Clique no botão abaixo para fazer uma pergunta! 😊
+    </div>
+  </div>
+
+  <!-- ================================================================ -->
+  <!-- BOTÃO FLUTUANTE PARA ABRIR/FECHAR O CHAT                          -->
+  <!-- ================================================================ -->
+  <button id="chatToggleBtn" aria-label="Abrir assistente Charles" title="Charles - Assistente Virtual">
+    <span class="tooltip">Fale com o Charles</span>
+    <span class="notification-badge">1</span>
+    <!-- Ícone de chat -->
+    <svg class="chat-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/>
+      <path d="M7 9h10v1.5H7zm0-3h10v1.5H7zm0 6h7v1.5H7z"/>
+    </svg>
+    <!-- Ícone de fechar -->
+    <svg class="close-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+    </svg>
+  </button>
+
+  <!-- ================================================================ -->
+  <!-- CHATBOT CHARLES (WIDGET FLUTUANTE)                               -->
+  <!-- ================================================================ -->
+  <div class="app-wrapper minimized">
+
+    <!-- ============ TELA INICIAL / VOZ (ROBÔ + MICROFONE) ============ -->
+    <div class="voice-screen" id="voiceScreen">
+      <div class="voice-content">
+        <!-- Robô Charles -->
+        <div class="robot-wrapper">
+          <div class="robot-glow"></div>
+          <img src="frontend/assets/charles-removebg-preview.png" class="robot-icon" id="robotIcon" alt="Charles - Assistente Virtual">
+          <!-- Onda sonora (aparece quando escutando) -->
+          <div class="sound-waves" id="soundWaves">
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
+        </div>
+
+        <!-- Texto dinâmico -->
+        <p class="voice-hint" id="voiceHint">Clique no microfone e pergunte</p>
+
+        <!-- Botão microfone grande -->
+        <button class="voice-mic-btn" id="voiceMicBtn" aria-label="Falar" title="Clique para perguntar">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+            <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+          </svg>
+        </button>
+
+        <!-- Alternativa: digitar texto -->
+        <div class="voice-type-alt">
+          <span class="alt-divider">ou</span>
+          <button class="alt-type-btn" id="altTypeBtn">Digitar pergunta</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ CHAT CONTAINER (aparece após perguntar) ============ -->
+    <div class="chat-container" id="chatContainer" style="display: none;">
+
+      <!-- HEADER -->
+      <header class="chat-header">
+        <img src="assets/Claro-logo.jpg" alt="Logo" class="logo" id="logoEmpresa">
+        <div class="header-info">
+          <h1>Charles</h1>
+          <div class="status">
+            <span class="dot" id="statusDot"></span>
+            <span id="statusText">Conectando...</span>
+          </div>
+        </div>
+        <button class="back-to-voice" id="backToVoiceBtn" title="Voltar ao início">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
+            <path d="M14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+          </svg>
+        </button>
+      </header>
+
+      <!-- ÁREA DE MENSAGENS -->
+      <div class="chat-messages" id="chatMessages">
+        <!-- Mensagem de boas-vindas será inserida via JS -->
+      </div>
+
+      <!-- INPUT -->
+      <div class="chat-input">
+        <input
+          type="text"
+          id="mensagemInput"
+          placeholder="Digite sua pergunta..."
+          autocomplete="off"
+          aria-label="Digite sua mensagem"
+        >
+        <button id="microfoneBtn" class="voice-btn" aria-label="Falar" title="Falar (clique e fale)">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+            <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+          </svg>
+        </button>
+        <button id="enviarBtn" aria-label="Enviar mensagem" title="Enviar">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+          </svg>
+        </button>
+        <button id="somBtn" class="voice-btn" aria-label="Ler resposta em voz alta" title="Ler resposta">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
+            <path d="M14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+          </svg>
+        </button>
+        <button id="stopSpeechBtn" class="voice-btn stop-speech-btn" aria-label="Parar fala" title="Parar fala" disabled>
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M6 6h12v12H6z"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- FOOTER -->
+      <footer class="chat-footer">
+        <span>© 2026 Departamento de Data Center - Claro Empresas | <a href="#" onclick="return false;">SharePoint</a></span>
+      </footer>
+    </div>
+
+  </div>
+
+  <!-- ================================================================ -->
+  <!-- JAVASCRIPT DO CHATBOT                                            -->
+  <!-- ================================================================ -->
+  <script src="frontend/js/api-client.js"></script>
+  <script src="frontend/js/voice.js"></script>
+  <script src="frontend/js/app.js"></script>
+
+  <!-- ================================================================ -->
+  <!-- SCRIPT DE CONTROLE DO BOTÃO FLUTUANTE E BALÃO                    -->
+  <!-- ================================================================ -->
+  <script>
+    (function() {
+      'use strict';
+
+      // ===== ELEMENTOS =====
+      const chatToggleBtn = document.getElementById('chatToggleBtn');
+      const appWrapper = document.querySelector('.app-wrapper');
+      const welcomeBubble = document.getElementById('welcomeBubble');
+      const notificationBadge = chatToggleBtn.querySelector('.notification-badge');
+
+      // ===== ESTADO =====
+      let chatOpen = false;
+      let welcomeShown = false;
+      let welcomeDismissed = false;
+
+      // ===== ABRIR / FECHAR CHAT =====
+      function toggleChat() {
+        chatOpen = !chatOpen;
+
+        if (chatOpen) {
+          // Abrir: mostra o app-wrapper e muda ícone para "X"
+          appWrapper.classList.remove('minimized');
+          chatToggleBtn.classList.add('open');
+          hideWelcomeBubble();
+          hideNotification();
+        } else {
+          // Fechar: esconde o app-wrapper e muda ícone para "chat"
+          appWrapper.classList.add('minimized');
+          chatToggleBtn.classList.remove('open');
+        }
+      }
+
+      chatToggleBtn.addEventListener('click', toggleChat);
+
+      // ===== BALÃO DE BOAS-VINDAS =====
+      function showWelcomeBubble() {
+        if (welcomeDismissed || chatOpen) return;
+        welcomeBubble.classList.add('show');
+        showNotification();
+      }
+
+      function hideWelcomeBubble() {
+        welcomeBubble.classList.remove('show');
+      }
+
+      function dismissWelcomeBubble() {
+        welcomeBubble.classList.remove('show');
+        welcomeDismissed = true;
+        hideNotification();
+      }
+
+      // Permite clicar no balão para abrir o chat
+      welcomeBubble.addEventListener('click', function(e) {
+        if (e.target.classList.contains('bubble-close')) return;
+        if (!chatOpen) {
+          toggleChat();
+        }
+      });
+
+      // Disponibiliza a função globalmente (para o onclick no HTML)
+      window.dismissWelcomeBubble = dismissWelcomeBubble;
+
+      // ===== NOTIFICAÇÃO (BADGE) =====
+      function showNotification() {
+        notificationBadge.classList.add('show');
+      }
+
+      function hideNotification() {
+        notificationBadge.classList.remove('show');
+      }
+
+      // ===== MOSTRAR BALÃO APÓS 3 SEGUNDOS =====
+      setTimeout(function() {
+        if (!welcomeDismissed && !chatOpen) {
+          showWelcomeBubble();
+          welcomeShown = true;
+        }
+      }, 3000);
+
+      // ===== ESC PARA FECHAR O CHAT =====
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && chatOpen) {
+          toggleChat();
+        }
+      });
+
+      // ===== LOG =====
+      console.log('%c🤖 Charles - Assistente Virtual | Data Center SD', 'color: #e3262e; font-size: 16px; font-weight: bold;');
+      console.log('%cChatbot flutuando sobre a página do Data Center SD', 'color: #555; font-size: 12px;');
+    })();
+  </script>
+
+</body>
+</html>
+]]>
