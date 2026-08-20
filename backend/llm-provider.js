@@ -33,7 +33,7 @@ const PROVIDER_CONFIG = {
     name: 'Groq',
     baseURL: 'https://api.groq.com/openai/v1',
     apiKeyEnv: 'GROQ_API_KEY',
-    defaultModel: 'llama-3.3-70b-versatile',
+    defaultModel: 'groq/compound',
     description: 'GrÃ¡tis, rÃ¡pido (~500 tok/s), Llama 3, Mixtral, Gemma'
   },
   openrouter: {
@@ -850,17 +850,17 @@ function classifyComplexity(query) {
  */
 const MODELS_BY_COMPLEXITY = {
   LOW: {
-    groq: 'llama-3.1-8b-instant',
+    groq: 'groq/compound-mini',
     openrouter: 'meta-llama/llama-3.1-8b-instruct',
     gemini: 'gemini-1.5-flash'
   },
   MEDIUM: {
-    groq: 'llama-3.3-70b-versatile',
+    groq: 'groq/compound',
     openrouter: 'meta-llama/llama-3.3-70b-instruct',
     gemini: 'gemini-1.5-flash'
   },
   HIGH: {
-    groq: 'llama-3.3-70b-versatile',
+    groq: 'groq/compound',
     openrouter: 'meta-llama/llama-3.3-70b-instruct',
     gemini: 'gemini-1.5-pro'
   }

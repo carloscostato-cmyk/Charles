@@ -4,6 +4,7 @@
     "express-rate-limit": "^8.6.2",
     "jsonwebtoken": "^9.0.3",
     "jwks-rsa": "^4.1.0",
+    "redis": "^6.2.1",
     "tesseract.js": "^7.0.0",
     "uuid": "^14.0.1"
   }

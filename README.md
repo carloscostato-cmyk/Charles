@@ -164,13 +164,25 @@ npm run dev
 ```
 
 O servidor estará disponível em `http://localhost:3000`.
-
+ 
 Consulte o nível de segurança em runtime:
-
+ 
 ```bash
 curl http://localhost:3000/api/status
 # → seguranca.nivel (7.5 em dev | 9.5 com Entra ID obrigatório)
 ```
+
+### ��� Configuração de voz gratuita (opcional)
+
+Para usar o Charles totalmente gratuito, sem chaves de API externas, basta deixar as variáveis de TTS vazias no arquivo `.env`. O sistema então utilizará a Web Speech API do navegador, que é gratuita e funciona offline.
+
+```env
+ELEVENLABS_API_KEY=
+OPENAI_API_KEY=
+AZURE_SPEECH_KEY=
+```
+
+A voz será a padrão do sistema operacional/navegador (ex: Microsoft David ou Zira no Windows).
 
 ---
 

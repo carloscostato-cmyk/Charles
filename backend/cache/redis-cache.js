@@ -63,7 +63,12 @@ class RedisCache {
       
       if (!url) return false;
       
-      this.client = redisModule.createClient({ url });
+      this.client = redisModule.createClient({
+        url,
+        socket: {
+          reconnectStrategy: false
+        }
+      });
       this.client.on('error', (err) => {
         console.warn('[Cache] Redis erro:', err.message);
         this.available = false;

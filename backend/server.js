@@ -89,6 +89,9 @@ const { getPDFThumbnailService } = require('./services/pdf-thumbnail-service');
 const { getMetricsCollector } = require('./observability/metrics');
 const { getTracer } = require('./observability/tracer');
 
+// FASE 11 - TTS Neural (ElevenLabs / OpenAI / Azure)
+const { synthesize, getStatus: getTTSStatus } = require('./tts/neural-tts-service');
+
 // FASE 3 - Agent Router
 const { getRouterAgent } = require('./agents/router-agent');
 
@@ -262,49 +265,54 @@ async function inicializar() {
     const ragService = getRAGService();
     await ragService.initialize();
 
-    // Indexa a FAQ se houver itens
-    if (faq.length > 0) {
-      const faqItems = faq.map(item => ({
-        pergunta: item.pergunta,
-        resposta: item.resposta
-      }));
-      await ragService.indexFAQItems(faqItems, { source: 'faq-excel' });
-      console.log(`[Server] FAQ indexada no RAG: ${faq.length} itens`);
-    }
-
-    // Indexa o arquivo Excel original no RAG
-    const excelPath = path.join(__dirname, '..', 'FQ_DATA_CENTER.xls');
-    if (require('fs').existsSync(excelPath)) {
-      await ragService.indexFile(excelPath, { source: 'excel-original' });
-      console.log('[Server] Arquivo Excel original indexado no RAG');
-    }
-
-    // Indexa Data Centers no RAG para busca semântica
-    try {
-      const dataCenterLoader = getDataCenterLoader();
-      const dcContexto = dataCenterLoader.gerarContextoRAG();
-      if (dcContexto.length > 0) {
-        for (const dc of dcContexto) {
-          await ragService.indexText(dc.content, { ...dc.metadata, source: 'datacenters' });
-        }
-        console.log(`[Server] Data Centers indexados no RAG: ${dcContexto.length} centros`);
-      }
-    } catch (e) {
-      console.warn('[Server] Erro ao indexar Data Centers no RAG:', e.message);
-    }
-
-    // Indexa arquivos PDF do Workspace no RAG automaticamente
-    try {
-      const { getPDFWorkspaceIndexer } = require('./rag/pdf-workspace-indexer');
-      const pdfIndexer = getPDFWorkspaceIndexer();
-      const pdfResult = await pdfIndexer.indexAllWorkspacePDFs();
-      console.log(`[Server] PDFs do Workspace: ${pdfResult.totalFiles} arquivos detectados (${pdfResult.totalChunks} novos chunks indexados)`);
-    } catch (e) {
-      console.warn('[Server] Erro ao indexar PDFs do Workspace:', e.message);
-    }
-
     const ragStats = await ragService.getStats();
-    console.log(`[Server] RAG: ${ragStats.totalDocuments} documentos indexados`);
+    if (ragStats.totalDocuments > 0) {
+      console.log(`[Server] RAG já possui ${ragStats.totalDocuments} documentos indexados. Pulando indexação...`);
+    } else {
+      // Indexa a FAQ se houver itens
+      if (faq.length > 0) {
+        const faqItems = faq.map(item => ({
+          pergunta: item.pergunta,
+          resposta: item.resposta
+        }));
+        await ragService.indexFAQItems(faqItems, { source: 'faq-excel' });
+        console.log(`[Server] FAQ indexada no RAG: ${faq.length} itens`);
+      }
+
+      // Indexa o arquivo Excel original no RAG
+      const excelPath = path.join(__dirname, '..', 'FQ_DATA_CENTER.xls');
+      if (require('fs').existsSync(excelPath)) {
+        await ragService.indexFile(excelPath, { source: 'excel-original' });
+        console.log('[Server] Arquivo Excel original indexado no RAG');
+      }
+
+      // Indexa Data Centers no RAG para busca semântica
+      try {
+        const dataCenterLoader = getDataCenterLoader();
+        const dcContexto = dataCenterLoader.gerarContextoRAG();
+        if (dcContexto.length > 0) {
+          for (const dc of dcContexto) {
+            await ragService.indexText(dc.content, { ...dc.metadata, source: 'datacenters' });
+          }
+          console.log(`[Server] Data Centers indexados no RAG: ${dcContexto.length} centros`);
+        }
+      } catch (e) {
+        console.warn('[Server] Erro ao indexar Data Centers no RAG:', e.message);
+      }
+
+      // Indexa arquivos PDF do Workspace no RAG automaticamente
+      try {
+        const { getPDFWorkspaceIndexer } = require('./rag/pdf-workspace-indexer');
+        const pdfIndexer = getPDFWorkspaceIndexer();
+        const pdfResult = await pdfIndexer.indexAllWorkspacePDFs();
+        console.log(`[Server] PDFs do Workspace: ${pdfResult.totalFiles} arquivos detectados (${pdfResult.totalChunks} novos chunks indexados)`);
+      } catch (e) {
+        console.warn('[Server] Erro ao indexar PDFs do Workspace:', e.message);
+      }
+
+      const ragStatsAfter = await ragService.getStats();
+      console.log(`[Server] RAG: ${ragStatsAfter.totalDocuments} documentos indexados`);
+    }
   } catch (error) {
     console.warn('[Server] Erro ao inicializar RAG:', error.message);
   }
@@ -464,7 +472,7 @@ try {
     console.log(`[Chat] Resposta: "${resultado.resposta.substring(0, 100)}..."`);
 
     // 3. Retorna resposta com tipagem
-    res.json({
+    const responseData = {
       pergunta: pergunta,
       resposta: resultado.resposta,
       fonte: resultado.fonte,
@@ -481,20 +489,57 @@ try {
       tools: resultado.tools,
       model: resultado.model,
       trace: resultado.trace,
-      tipoResposta: resultado.tipoResposta
-    });
+      tipoResposta: resultado.tipoResposta,
+      voice: resultado.voice
+    };
+    
+    //ativa TTS automaticamente
+    if (resultado.tipoResposta?.deveSerFalado) {
+      try {
+        const audio = await synthesize(resultado.resposta, {
+          sentimento: resultado.voice?.sentimento,
+          parametrosVoz: resultado.voice?.parametrosVoz,
+          intencao: resultado.voice?.intencao
+        });
+        responseData.audio = {
+          provider: audio.provider,
+          mimeType: audio.mimeType,
+          audioBase64: audio.audioBase64,
+          fallback: audio.fallback
+        };
+      } catch (ttsError) {
+        console.warn(`[Chat] TTS falhou: ${ttsError.message}`);
+        responseData.audio = { fallback: true, error: ttsError.message };
+      }
+    }
+    
+    res.json(responseData);
 
   } catch (error) {
     console.error('[Chat] Erro:', error.message);
-
-    res.json({
+    
+    const errorResponse = {
       pergunta: pergunta,
       resposta: 'Desculpe, ocorreu um erro ao processar sua pergunta. Por favor, tente novamente.',
       fonte: 'erro',
       sugestoes: getSugestoes(faq, 3),
       faqRelacionada: [],
       tipoResposta: { tipo: 'conversacao', deveSerFalado: true }
-    });
+    };
+    
+    try {
+      const audio = await synthesize(errorResponse.resposta, {});
+      errorResponse.audio = {
+        provider: audio.provider,
+        mimeType: audio.mimeType,
+        audioBase64: audio.audioBase64,
+        fallback: audio.fallback
+      };
+    } catch (ttsError) {
+      errorResponse.audio = { fallback: true, error: ttsError.message };
+    }
+    
+    res.json(errorResponse);
   } finally {
     metricsCollector.recordRequestEnd();
   }
@@ -703,6 +748,42 @@ app.post('/api/voice/tts', async (req, res) => {
       cues: cuesData.cues,
       parametrosVoz: cuesData.parametros,
       sentimento: cuesData.sentimento,
+      status: neuralTTS.getStatus()
+    });
+  } catch (error) {
+    res.status(500).json({ erro: error.message });
+  }
+});
+
+/**
+ * POST /api/tts
+ * Alias para /api/voice/tts para consumo direto do frontend.
+ * Recebe texto e retorna áudio gerado pelo neural-tts-service.
+ */
+app.post('/api/tts', async (req, res) => {
+  try {
+    const { texto, sentimento, parametrosVoz, intencao } = req.body || {};
+    if (!texto || typeof texto !== 'string' || !texto.trim()) {
+      return res.status(400).json({ erro: 'texto é obrigatório' });
+    }
+    if (texto.length > 5000) {
+      return res.status(400).json({ erro: 'texto excede 5000 caracteres' });
+    }
+
+    const neuralTTS = require('./tts/neural-tts-service');
+    let cuesData = { cues: [], parametros: parametrosVoz, sentimento };
+    try {
+      const { gerarCuesFala } = require('./agents/tts-specialist');
+      if (gerarCuesFala) {
+        cuesData = gerarCuesFala(texto, { sentimento, parametrosVoz, intencao });
+      }
+    } catch(e) {}
+
+    const audio = await neuralTTS.synthesize(texto, { sentimento, parametrosVoz, intencao });
+
+    res.json({
+      sucesso: true,
+      ...audio,
       status: neuralTTS.getStatus()
     });
   } catch (error) {
