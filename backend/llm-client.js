@@ -28,6 +28,9 @@ const orchestrator = require('./agents/orchestrator');
 const promptNaturalizer = require('./agents/prompt-naturalizer-agent');
 const sentimentClassifier = require('./agents/sentiment-classifier');
 const { getVoiceSessionManager } = require('./voice/voice-session-manager');
+const qualityEnforcer = require('./agents/quality-enforcer');
+const socialSpecialist = require('./agents/social-specialist');
+const { gerarSaudacao, detectarPeriodo } = require('./agents/humanizer');
 
 const TIMEOUT_LLM = 15000;
 const cache = getCacheManager();
@@ -38,6 +41,82 @@ const cache = getCacheManager();
 function getProviderAtivo() {
   const providerName = process.env.LLM_PROVIDER || 'groq';
   return getProvider(providerName);
+}
+
+/**
+ * Controle de knowledge gaps (perguntas respondidas SEM lastro documental).
+ * Persiste em knowledge-gaps.json (ver agents/knowledge-gap.js) e alimenta
+ * GET /api/knowledge-gaps. Nunca interrompe o fluxo de resposta.
+ */
+
+/** Fontes que indicam resposta gerada apenas pelo LLM (sem lastro documental). */
+const FONTES_SO_LLM = new Set(['llm', 'llm-cache', 'llm-fallback', 'llm-stream']);
+const NO_EVIDENCE_RESPONSE = 'Não encontrei evidência documental suficiente para confirmar essa orientação. Não vou completar a resposta com suposições. Valide o tema com o responsável pelo processo e forneça um documento, procedimento ou registro oficial para que eu possa responder com segurança.';
+
+function temEvidenciaDocumental({ contextoKB, ragResult, resultadosFAQ, toolResults }) {
+  if (ragResult?.hasContext) return true;
+  if (String(contextoKB || '').includes('=== FAQ RELEVANTE ===')) return true;
+  if (String(contextoKB || '').includes('=== DATA CENTERS RELEVANTES ===')) return true;
+  if (Array.isArray(resultadosFAQ) && resultadosFAQ.some((item) => Number(item?.score || 0) >= 0.5)) {
+    return true;
+  }
+  return Array.isArray(toolResults) && toolResults.some((item) =>
+    item?.success && item?.result?.hasContext === true && item?.result?.canAnswer === true
+  );
+}
+
+/**
+ * Avalia se uma resposta carece de fonte documental (candidata a knowledge gap).
+ * @param {Object} p
+ * @param {string} p.fonte - fonte da resposta
+ * @param {string} [p.contextoKB] - contexto da Knowledge Base injetado no prompt
+ * @param {Object} [p.ragResult] - resultado do RAG ({hasContext})
+ * @param {Array}  [p.resultadosFAQ] - matches fuzzy da FAQ ({score})
+ * @returns {boolean} true se a resposta saiu sem lastro documental
+ */
+function semFonteDocumental({ fonte, contextoKB, ragResult, resultadosFAQ }) {
+  if (!FONTES_SO_LLM.has(fonte)) return false;
+  if (ragResult && ragResult.hasContext) return false;
+  const kb = String(contextoKB || '');
+  if (kb.includes('=== FAQ RELEVANTE ===') || kb.includes('=== DATA CENTERS RELEVANTES ===')) {
+    return false;
+  }
+  const melhorFAQ = Array.isArray(resultadosFAQ) && resultadosFAQ.length > 0
+    ? (resultadosFAQ[0].score || 0)
+    : 0;
+  if (melhorFAQ >= 0.5) return false;
+  return true;
+}
+
+/** Registra gap sem derrubar a resposta (falhas viram warning). */
+function registrarGapSilencioso(pergunta, detalhe) {
+  try {
+    const gap = orchestrator.knowledgeGap.registrarGap(pergunta, detalhe);
+    if (gap) console.log(`[LLM-Client] 📝 Knowledge gap registrado: "${pergunta}"`);
+  } catch (e) {
+    console.warn(`[LLM-Client] Falha ao registrar knowledge gap: ${e.message}`);
+  }
+}
+
+/**
+ * Ao responder com fonte documental, fecha lacuna pendente equivalente.
+ * Match exato normalizado (mesmo critério de deduplicação do registrarGap).
+ * Limitação conhecida: considera no máximo 50 pendentes por chamada.
+ */
+function fecharGapSilencioso(pergunta, resposta) {
+  try {
+    const norm = (s) => String(s || '').trim().toLowerCase().replace(/\s+/g, ' ');
+    const alvo = norm(pergunta);
+    if (!alvo) return;
+    const pendentes = orchestrator.knowledgeGap.listarPerguntasPendentes(50);
+    const gap = pendentes.find((g) => norm(g.pergunta) === alvo);
+    if (gap) {
+      orchestrator.knowledgeGap.marcarRespondida(gap.id, resposta);
+      console.log(`[LLM-Client] ✅ Knowledge gap #${gap.id} fechado`);
+    }
+  } catch (e) {
+    console.warn(`[LLM-Client] Falha ao fechar knowledge gap: ${e.message}`);
+  }
 }
 
 /**
@@ -54,11 +133,26 @@ async function verificarLLM() {
 /**
  * Constrói o prompt do sistema com contexto RAG e memória (Fase 1 - Naturalizado)
  */
+/**
+ * Constrói o prompt do sistema com contexto RAG e memória.
+ *
+ * @param {string} contextoRAG
+ * @param {string} contextoMemoria
+ * @param {Array} fatosUsuario
+ * @param {string} [contextoKB]
+ * @param {string} [perguntaUsuario] - texto do usuário; habilita a adaptação
+ *   de tom por sentimento. Sem ele, a resposta sai sempre neutra.
+ */
 function construirSystemPrompt(contextoRAG, contextoMemoria, fatosUsuario, contextoKB, perguntaUsuario) {
-  // Usa prompt naturalizado ao invés de hardcoded
-  const sentimento = sentimentClassifier.classificar(perguntaUsuario || '');
-  
-  let prompt = promptNaturalizer.gerarPromptNaturalizado({ sentimento });
+  // Análise de tom do usuário — alimenta a adaptation do prompt mestre
+  const analise = sentimentClassifier.classificar(perguntaUsuario || '');
+  const promptEmpatia = sentimentClassifier.gerarPromptEmpatia(analise);
+
+  let prompt = promptNaturalizer.gerarPromptNaturalizado({ sentimento: analise.sentimento });
+
+  if (promptEmpatia) {
+    prompt += `\n\nAJUSTE DE TOM: ${promptEmpatia}`;
+  }
 
   // Adiciona instruções específicas para evitar respostas genéricas
   prompt += `\n\nIMPORTANTE: Responda de forma única e específica para cada pergunta. Evite respostas genéricas ou repetitivas. Se a pergunta for sobre um Data Center específico, mencione o nome da cidade/unidade. Se for sobre um procedimento, seja específico sobre os passos. Cada resposta deve ser personalizada para a pergunta atual.\n`;
@@ -164,23 +258,32 @@ const RESPOSTAS_DESPEDIDA = [
   'Tchau! Se precisar de mais informações, é só voltar.'
 ];
 
-function detectarSaudacao(pergunta) {
+function detectarConversaSocial(pergunta) {
   const texto = String(pergunta || '').trim();
   if (!texto) return null;
 
-  const lower = texto.toLowerCase();
+  const social = socialSpecialist.avaliar(texto);
+  if (social) {
+    return { resposta: social.resposta, tipo: social.tipo };
+  }
 
+  const lower = texto.toLowerCase();
   if (SAUDACOES.test(lower)) {
-    return RESPOSTAS_SAUDACAO[Math.floor(Math.random() * RESPOSTAS_SAUDACAO.length)];
+    return { resposta: gerarSaudacao(detectarPeriodo()), tipo: 'saudacao' };
   }
   if (AGRADECIMENTOS.test(lower)) {
-    return RESPOSTAS_AGRADECIMENTO[Math.floor(Math.random() * RESPOSTAS_AGRADECIMENTO.length)];
+    return { resposta: RESPOSTAS_AGRADECIMENTO[0], tipo: 'agradecimento' };
   }
   if (DESPEDIDAS.test(lower)) {
-    return RESPOSTAS_DESPEDIDA[Math.floor(Math.random() * RESPOSTAS_DESPEDIDA.length)];
+    return { resposta: RESPOSTAS_DESPEDIDA[0], tipo: 'despedida' };
   }
 
   return null;
+}
+
+function detectarSaudacao(pergunta) {
+  const conversa = detectarConversaSocial(pergunta);
+  return conversa ? conversa.resposta : null;
 }
 
 function responderConsultaDataCenter(pergunta, userId, tracer, traceId) {
@@ -380,7 +483,7 @@ async function aplicarVoiceGate(pergunta, userId, traceId) {
       };
     }
 
-    if (turnResult.status === 'COMPLETED' && turnResult.response) {
+    if (turnResult.status === 'COMPLETED' && turnResult.response && turnResult.response.text && turnResult.response.text.trim() && turnResult.response.source !== 'error-fallback') {
       return {
         resposta: turnResult.response.text,
         fonte: turnResult.response.source || 'voice-gate',
@@ -415,11 +518,12 @@ async function aplicarVoiceGate(pergunta, userId, traceId) {
         }
       };
     }
-  } catch (error) {
-    console.warn('[LLM-Client] Voice gate falhou, seguindo fluxo padrão:', error.message);
-  }
 
-  return null;
+    return null;
+  } catch (error) {
+    console.warn('[LLM-Client] Erro ao aplicar voice gate:', error.message);
+    return null;
+  }
 }
 
 async function processarPergunta(pergunta, resultadosFAQ, userId = 'default') {
@@ -429,9 +533,11 @@ async function processarPergunta(pergunta, resultadosFAQ, userId = 'default') {
   try {
     console.log(`\n[LLM-Client] 🔍 PROCESSANDO: "${pergunta}"`);
 
-    const respostaSaudacao = detectarSaudacao(pergunta);
-    if (respostaSaudacao) {
-      console.log(`[LLM-Client] 👋 Saudação detectada. Retornando resposta curta.`);
+    const conversaSocial = detectarConversaSocial(pergunta);
+    if (conversaSocial) {
+      console.log(`[LLM-Client] 💬 Conversa social detectada (${conversaSocial.tipo}). Retornando resposta curta.`);
+
+      const respostaSaudacao = conversaSocial.resposta;
 
       const voiceSpecialist = getVoiceSpecialist();
       const vozIdeal = voiceSpecialist.detectarVozIdeal(pergunta);
@@ -440,46 +546,46 @@ async function processarPergunta(pergunta, resultadosFAQ, userId = 'default') {
 
       const memoryManager = getMemoryManager();
       await memoryManager.remember(userId, pergunta, respostaComVoz, {
-        fonte: 'saudacao',
+        fonte: `social:${conversaSocial.tipo}`,
         qualidade: 95
       });
 
       await tracer.endTrace(traceId, respostaComVoz, {
         quality: 95,
-        fonte: 'saudacao',
+        fonte: `social:${conversaSocial.tipo}`,
         success: true
       });
 
       return {
         resposta: respostaComVoz,
-        fonte: 'saudacao',
+        fonte: `social:${conversaSocial.tipo}`,
         resultadosFAQ: [],
         qualidade: 95,
-        contexto: { ehSaudacao: true },
+        contexto: { ehSaudacao: true, social: true },
         routing: {
-          intent: 'saudacao',
+          intent: conversaSocial.tipo,
           confidence: 1,
-          agentsUsed: ['saudacao'],
-          reasoning: 'Saudação detectada - resposta curta',
+          agentsUsed: ['social-specialist', 'humanizer'],
+          reasoning: `Conversa social detectada (${conversaSocial.tipo}) - resposta curta, sem formato técnico`,
           duration: 1
         },
         tools: [],
         ragContext: [],
         memory: { facts: 0, history: 0 },
-        model: { provider: 'Local', model: 'greeting', complexity: 'low' },
+        model: { provider: 'Local', model: 'social', complexity: 'low' },
         trace: { traceId },
         tipoResposta: {
           tipo: 'conversacao',
           deveSerFalado: true,
           deveSerExibido: true,
-          descricao: 'Resposta de saudação'
+          descricao: 'Resposta de conversa social'
         },
         voice: {
           ssml: respostaComVoz,
           ssmlCompleto: respostaComVoz,
           parametrosVoz: {},
           sentimento: 'neutro',
-          intencao: 'saudacao',
+          intencao: conversaSocial.tipo,
           personalidade: 'charles-voice',
           metadados: {}
         }
@@ -494,6 +600,9 @@ async function processarPergunta(pergunta, resultadosFAQ, userId = 'default') {
 
     if (respostaLiteralFAQ) {
       console.log(`[LLM-Client] 🎯 FAQ com match forte detectado antes do voice gate: ${pergunta}`);
+
+      // Resposta com lastro documental: fecha lacuna pendente equivalente, se houver
+      fecharGapSilencioso(pergunta, respostaLiteralFAQ);
 
       const voiceSpecialist = getVoiceSpecialist();
       const vozIdeal = voiceSpecialist.detectarVozIdeal(pergunta);
@@ -558,26 +667,62 @@ async function processarPergunta(pergunta, resultadosFAQ, userId = 'default') {
       };
     }
 
-    // Voice gate: pré-fala para perguntas não-saudacao (apenas se FAQ match forte não foi encontrado)
-    if (!respostaSaudacao) {
-      const voiceGateResult = await aplicarVoiceGate(pergunta, userId, traceId);
-      if (voiceGateResult) {
-        console.log(`[LLM-Client] 🎙️ Voice gate aplicado: ${voiceGateResult.fonte}`);
+    // Consulta aos Especialistas de Data Center (Localização, Contato, Diretório, Região)
+    const specialistResponse = responderConsultaDataCenter(pergunta, userId, tracer, traceId);
+    if (specialistResponse) {
+      console.log(`[LLM-Client] 🏢 Especialista de Data Center acionado: ${specialistResponse.fonte}`);
 
-        const memoryManager = getMemoryManager();
-        await memoryManager.remember(userId, pergunta, voiceGateResult.resposta, {
-          fonte: voiceGateResult.fonte,
-          qualidade: voiceGateResult.qualidade
-        });
+      const voiceOrchestrator = getVoiceOrchestrator();
+      const respostaComVoz = voiceOrchestrator.processarRespostaComVoz(specialistResponse.resposta, pergunta, {
+        fonte: specialistResponse.fonte
+      });
 
-        await tracer.endTrace(traceId, voiceGateResult.resposta, {
-          quality: voiceGateResult.qualidade,
-          fonte: voiceGateResult.fonte,
-          success: true
-        });
+      const memoryManager = getMemoryManager();
+      await memoryManager.remember(userId, pergunta, specialistResponse.resposta, {
+        fonte: specialistResponse.fonte,
+        qualidade: 98
+      });
 
-        return voiceGateResult;
-      }
+      await tracer.endTrace(traceId, specialistResponse.resposta, {
+        quality: 98,
+        fonte: specialistResponse.fonte,
+        success: true
+      });
+
+      return {
+        resposta: respostaComVoz.resposta,
+        fonte: specialistResponse.fonte,
+        resultadosFAQ: [],
+        qualidade: 98,
+        contexto: { ehDataCenter: true },
+        routing: specialistResponse.routing || {
+          intent: specialistResponse.tipo,
+          confidence: 0.98,
+          agentsUsed: [specialistResponse.fonte],
+          reasoning: 'Resposta direta do especialista de Data Center',
+          duration: 5
+        },
+        tools: [],
+        ragContext: [],
+        memory: { facts: 0, history: 0 },
+        model: { provider: 'DataCenterSpecialist', model: 'local', complexity: 'low' },
+        trace: { traceId },
+        tipoResposta: {
+          tipo: 'conversacao',
+          deveSerFalado: true,
+          deveSerExibido: true,
+          descricao: 'Resposta de especialista de Data Center'
+        },
+        voice: {
+          ssml: respostaComVoz.ssml,
+          ssmlCompleto: respostaComVoz.ssmlCompleto,
+          parametrosVoz: respostaComVoz.parametrosVoz,
+          sentimento: 'neutro',
+          intencao: specialistResponse.tipo,
+          personalidade: 'charles-voice',
+          metadados: {}
+        }
+      };
     }
 
     // PRIORIDADE 0: Feedback Manager verifica as fontes quando não há FAQ forte.
@@ -822,52 +967,6 @@ async function processarPergunta(pergunta, resultadosFAQ, userId = 'default') {
       };
     }
 
-    const specialistResponse = responderConsultaDataCenter(pergunta, userId, tracer, traceId);
-    if (specialistResponse) {
-      console.log(`[LLM-Client] 🎯 Resposta determinística de especialista para: ${pergunta}`);
-
-      const voiceSpecialist = getVoiceSpecialist();
-      const vozIdeal = voiceSpecialist.detectarVozIdeal(pergunta);
-      voiceSpecialist.setVoz(vozIdeal);
-      const respostaEspecialista = voiceSpecialist.aplicarVoz(specialistResponse.resposta);
-
-      const responseFormatter = getResponseFormatter();
-      const tipagem = responseFormatter.detectarTipo(pergunta, respostaEspecialista);
-
-      const memoryManager = getMemoryManager();
-      await memoryManager.remember(userId, pergunta, respostaEspecialista, {
-        fonte: specialistResponse.fonte,
-        qualidade: 98
-      });
-
-      await tracer.endTrace(traceId, respostaEspecialista, {
-        quality: 98,
-        fonte: specialistResponse.fonte,
-        success: true
-      });
-
-      return {
-        resposta: respostaEspecialista,
-        fonte: specialistResponse.fonte,
-        resultadosFAQ: resultadosFAQ || [],
-        qualidade: 98,
-        contexto: { ehDataCenter: true },
-        routing: specialistResponse.routing,
-        tools: [],
-        ragContext: [],
-        memory: { facts: 0, history: 0 },
-        model: { provider: 'specialist', model: 'local', complexity: 'low' },
-        trace: { traceId },
-        tipoResposta: {
-          tipo: tipagem.tipo,
-          deveSerFalado: tipagem.deveSerFalado,
-          deveSerExibido: tipagem.deveSerExibido || false,
-          descricao: tipagem.descricao,
-          formatacao: responseFormatter._determinarFormatacao(tipagem.tipo, respostaEspecialista)
-        }
-      };
-    }
-
     // ============ ETAPA 1: BUSCA NA FAQ - PRIORIDADE #1 ============
     let respostaFAQ = null;
     let scoreFAQ = 0;
@@ -881,6 +980,9 @@ async function processarPergunta(pergunta, resultadosFAQ, userId = 'default') {
     // SE FAQ ENCONTROU COM SCORE ALTO, RETORNA DIRETO (sem chamar LLM)
     if (respostaLiteralFAQ) {
       console.log(`[LLM-Client] 🎯 FAQ com match forte! Retornando resposta literal do FAQ (sem reescrever)`);
+
+      // Resposta com lastro documental: fecha lacuna pendente equivalente, se houver
+      fecharGapSilencioso(pergunta, respostaLiteralFAQ);
 
       // Aplica voz especialista mesmo no FAQ
       const voiceSpecialist = getVoiceSpecialist();
@@ -979,6 +1081,9 @@ async function processarPergunta(pergunta, resultadosFAQ, userId = 'default') {
       });
     }
 
+    // Fail closed: sem evidência validada, não há chamada ao LLM. Isso impede
+    // que conhecimento geral ou uma resposta plausível seja apresentada como
+    // fato corporativo.
     // ============ ETAPA 5: MEMORY - recupera memória do usuário ============
     const memoryManager = getMemoryManager();
     const memory = await memoryManager.recall(userId, pergunta);
@@ -988,6 +1093,13 @@ async function processarPergunta(pergunta, resultadosFAQ, userId = 'default') {
     const toolRegistry = getToolRegistry();
     const toolResults = await toolRegistry.autoExecute(pergunta);
     console.log(`[LLM-Client] 🔧 Ferramentas executadas: ${toolResults.results.length}`);
+
+    const evidenciaComFerramentas = temEvidenciaDocumental({
+      contextoKB,
+      ragResult,
+      resultadosFAQ,
+      toolResults: toolResults.results
+    });
 
     for (const result of toolResults.results) {
       tracer.recordTool(traceId, result.tool, result.duration);
@@ -1011,7 +1123,7 @@ async function processarPergunta(pergunta, resultadosFAQ, userId = 'default') {
       contextoFinal += `[Contexto Semântico Adicional]\n${ragResult.context}\n\n`;
     }
 
-    const systemPrompt = construirSystemPrompt(contextoFinal, memory.summary || '', memory.facts || []);
+    const systemPrompt = construirSystemPrompt(contextoFinal, memory.summary || '', memory.facts || [], contextoKB, pergunta);
 
     // Adiciona contexto de ferramentas
     let toolContext = '';
@@ -1029,7 +1141,11 @@ async function processarPergunta(pergunta, resultadosFAQ, userId = 'default') {
     let fonte = 'llm';
     const provider = getProviderAtivo();
 
-    if (provider.disponivel) {
+    if (!evidenciaComFerramentas) {
+      respostaLLM = NO_EVIDENCE_RESPONSE;
+      fonte = 'no-evidence';
+      console.warn('[LLM-Client] 🛡️ Sem evidência validada; chamada ao LLM bloqueada');
+    } else if (provider.disponivel) {
       try {
         const cacheKey = hashKey('llm', `${smartModel.provider}:${smartModel.model}:${pergunta}`);
         const cached = await cache.get(cacheKey);
@@ -1140,6 +1256,38 @@ async function processarPergunta(pergunta, resultadosFAQ, userId = 'default') {
       }
     }
 
+    // ============ KNOWLEDGE GAP: registra resposta sem lastro documental ============
+    // Critério: só-LLM + RAG sem contexto + KB sem trecho específico + FAQ fuzzy fraca
+    if (semFonteDocumental({ fonte, contextoKB, ragResult, resultadosFAQ })) {
+      registrarGapSilencioso(
+        pergunta,
+        `Resposta gerada apenas pelo LLM (fonte=${fonte}), sem contexto específico da KB ou RAG.`
+      );
+    }
+
+    // ============ QUALITY ENFORCER v4.1: Valida e força compliance com prompt-master ============
+    console.log(`[LLM-Client] 🔍 Quality Enforcer validando resposta...`);
+    const qualityResult = await qualityEnforcer.enforceQuality({
+      pergunta,
+      resposta: respostaLLM,
+      fonte,
+      resultadosFAQ,
+      ragResult,
+      ragSources: ragResult?.sources,
+      toolResults: toolResults?.results,
+      specialistResults: [],
+      contextoKB
+    });
+    
+    respostaLLM = qualityResult.resposta;
+    const enforcedQualityScore = qualityResult.qualityScore;
+    const qualityWarnings = qualityResult.warnings;
+    
+    if (qualityWarnings.length > 0) {
+      console.log(`[LLM-Client] ⚠️ Quality warnings: ${qualityWarnings.join(', ')}`);
+    }
+    console.log(`[LLM-Client] ✅ Quality Score: ${enforcedQualityScore}/100 | Citações: ${qualityResult.citationCount} | Estrutura: ${qualityResult.estrutura.isStructured ? 'OK' : 'FALTANDO'}`);
+
     // ============ ETAPA 9: AGENT ROUTER - roteamento inteligente ============
     const router = getRouterAgent();
     const resultadoOrquestrado = router.processar(
@@ -1148,6 +1296,9 @@ async function processarPergunta(pergunta, resultadosFAQ, userId = 'default') {
       respostaLLM,
       fonte
     );
+    
+    // Override qualidade com score forçado pelo enforcer
+    resultadoOrquestrado.qualidade = enforcedQualityScore;
 
     // ============ ETAPA 10: WEB ENRICHMENT - enriquece com informações da web ============
     const webSearch = getWebDataCenterSearch();
@@ -1319,17 +1470,28 @@ async function processarPerguntaStream(pergunta, res, resultadosFAQ, userId = 'd
     const smartModel = selectSmartModel(pergunta);
 
     // Knowledge Base
-    const kb = getKnowledgeBase();
-    const contextoKB = kb.getContext(pergunta);
+    const kb = await getKnowledgeBase();
+    const contextoKB = kb.getContextoOtimizado ? kb.getContextoOtimizado(pergunta) : (kb.getContext ? kb.getContext(pergunta) : '');
 
     // FAQ
     const respostaFAQ = selecionarRespostaFAQLiteral(pergunta, resultadosFAQ);
     if (respostaFAQ) {
       // FAQ literal - streama diretamente sem chamar LLM
+      fecharGapSilencioso(pergunta, respostaFAQ); // fecha lacuna pendente equivalente, se houver
       sse.sendMetadata(res, { fonte: 'faq-literal', qualidade: 100 });
       await sse.streamText(res, respostaFAQ, 20);
       sse.end(res, { fonte: 'faq-literal', qualidade: 100 });
       await tracer.endTrace(traceId, respostaFAQ, { quality: 100, fonte: 'faq-literal', success: true });
+      return;
+    }
+
+    // Especialistas de Data Center
+    const specialistDC = responderConsultaDataCenter(pergunta, userId, tracer, traceId);
+    if (specialistDC && specialistDC.resposta) {
+      sse.sendMetadata(res, { fonte: specialistDC.fonte, qualidade: 98 });
+      await sse.streamText(res, specialistDC.resposta, 20);
+      sse.end(res, { fonte: specialistDC.fonte, qualidade: 98 });
+      await tracer.endTrace(traceId, specialistDC.resposta, { quality: 98, fonte: specialistDC.fonte, success: true });
       return;
     }
 
@@ -1338,6 +1500,13 @@ async function processarPerguntaStream(pergunta, res, resultadosFAQ, userId = 'd
     // RAG
     const ragService = getRAGService();
     const ragResult = await ragService.search(pergunta);
+
+    const evidenciaRAG = temEvidenciaDocumental({
+      contextoKB,
+      ragResult,
+      resultadosFAQ,
+      toolResults: []
+    });
 
     // Memory
     const memoryManager = getMemoryManager();
@@ -1352,7 +1521,7 @@ async function processarPerguntaStream(pergunta, res, resultadosFAQ, userId = 'd
       contextoFinal += `[Contexto Semântico]\n${ragResult.context}\n\n`;
     }
 
-    const systemPrompt = construirSystemPrompt(contextoFinal, memory.summary || '', memory.facts || []);
+    const systemPrompt = construirSystemPrompt(contextoFinal, memory.summary || '', memory.facts || [], contextoKB, pergunta);
 
     // Envia metadados ao cliente
     sse.sendMetadata(res, {
@@ -1367,6 +1536,18 @@ async function processarPerguntaStream(pergunta, res, resultadosFAQ, userId = 'd
 
     // ============ STREAMING REAL DO LLM ============
     const provider = getProviderAtivo();
+
+    if (!evidenciaRAG) {
+      sse.sendMetadata(res, { fonte: 'no-evidence', qualidade: 40 });
+      await sse.streamText(res, NO_EVIDENCE_RESPONSE, 20);
+      sse.end(res, { fonte: 'no-evidence', qualidade: 40 });
+      await tracer.endTrace(traceId, NO_EVIDENCE_RESPONSE, {
+        quality: 40,
+        fonte: 'no-evidence',
+        success: true
+      });
+      return;
+    }
 
     // Para LocalProvider (sem streaming real), usa fallback
     if (!provider.disponivel || provider.name === 'Local Fallback') {
@@ -1466,6 +1647,14 @@ async function processarPerguntaStream(pergunta, res, resultadosFAQ, userId = 'd
     const respostaFinal = streamResult.fullText || '';
     const fonte = ragResult.hasContext ? 'rag+llm-stream' : 'llm-stream';
 
+    // Knowledge gap: resposta em streaming sem lastro documental
+    if (semFonteDocumental({ fonte, contextoKB, ragResult, resultadosFAQ })) {
+      registrarGapSilencioso(
+        pergunta,
+        `Resposta streaming gerada apenas pelo LLM (fonte=${fonte}), sem contexto específico da KB ou RAG.`
+      );
+    }
+
     // Salva na memória
     memoryManager.memorize(userId, pergunta, respostaFinal);
 
@@ -1526,4 +1715,12 @@ function limparHistorico() {
   memoryManager.newSession('default');
 }
 
-module.exports = { verificarLLM, processarPergunta, processarPerguntaStream, limparHistorico, selecionarRespostaFAQLiteral };
+module.exports = {
+  verificarLLM,
+  processarPergunta,
+  processarPerguntaStream,
+  limparHistorico,
+  selecionarRespostaFAQLiteral,
+  semFonteDocumental,
+  temEvidenciaDocumental
+};

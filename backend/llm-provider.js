@@ -47,8 +47,8 @@ const PROVIDER_CONFIG = {
     name: 'Google Gemini',
     baseURL: 'https://generativelanguage.googleapis.com/v1beta/models',
     apiKeyEnv: 'GEMINI_API_KEY',
-    defaultModel: 'gemini-1.5-flash',
-    description: 'Google Gemini API (visÃ£o computacional nativa)'
+    defaultModel: 'gemini-3-flash-preview',
+    description: 'Google Gemini API (visão computacional nativa)'
   }
 };
 
@@ -852,17 +852,17 @@ const MODELS_BY_COMPLEXITY = {
   LOW: {
     groq: 'groq/compound-mini',
     openrouter: 'meta-llama/llama-3.1-8b-instruct',
-    gemini: 'gemini-1.5-flash'
+    gemini: 'gemini-3-flash-preview'
   },
   MEDIUM: {
     groq: 'groq/compound',
     openrouter: 'meta-llama/llama-3.3-70b-instruct',
-    gemini: 'gemini-1.5-flash'
+    gemini: 'gemini-3-flash-preview'
   },
   HIGH: {
     groq: 'groq/compound',
     openrouter: 'meta-llama/llama-3.3-70b-instruct',
-    gemini: 'gemini-1.5-pro'
+    gemini: 'gemini-3-flash-preview'
   }
 };
 

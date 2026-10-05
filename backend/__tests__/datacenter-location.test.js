@@ -37,3 +37,38 @@ describe('Data Center location routing', () => {
     expect(response).not.toMatch(/Encontrei 7 resultado/);
   });
 });
+
+describe('isLocationQuery - guarda contra sequestro de perguntas técnicas', () => {
+  let specialist;
+  beforeAll(() => {
+    const loader = getDataCenterLoader();
+    loader.loadFromExcel(path.join(__dirname, '..', '..', 'sites_data_center.xlsx'));
+    specialist = getSpecialistLocator();
+  });
+
+  it('NÃO trata pergunta de senha como localização', () => {
+    expect(specialist.isLocationQuery('Qual é a senha do servidor de produção?')).toBe(false);
+  });
+
+  it('NÃO trata pergunta de configuração como localização, mesmo citando cidade', () => {
+    expect(
+      specialist.isLocationQuery(
+        'Como faço para configurar um balanceador F5 Big-IP no datacenter de Manaus?'
+      )
+    ).toBe(false);
+  });
+
+  it('UF só como palavra isolada ("produção" não casa "pr")', () => {
+    expect(specialist.isLocationQuery('Qual o horário do ambiente de produção?')).toBe(false);
+    expect(specialist.isLocationQuery('Preciso de ajuda com o log de produção')).toBe(false);
+  });
+
+  it('ainda detecta perguntas legítimas de endereço/localização', () => {
+    expect(specialist.isLocationQuery('Endereços do data center de São Paulo')).toBe(true);
+    expect(specialist.isLocationQuery('Me passa o endereço do data center de São Paulo?')).toBe(true);
+    expect(specialist.isLocationQuery('Onde fica o data center de Brasília?')).toBe(true);
+    expect(specialist.isLocationQuery('Qual o data center mais próximo de SP?')).toBe(true);
+    expect(specialist.isLocationQuery('Telefone do data center de Manaus')).toBe(true);
+    expect(specialist.isLocationQuery('Data center em Recife')).toBe(true);
+  });
+});

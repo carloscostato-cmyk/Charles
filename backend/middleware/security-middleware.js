@@ -98,6 +98,18 @@ class PIIScrubber {
 
     let sanitized = text;
 
+    // Cartão de crédito ANTES do telefone: a sequência de 13-19 dígitos
+    // contém padrão que a regra de telefone consumiria primeiro,
+    // produzindo "[TELEFONE_REDACTED] [TELEFONE_REDACTED]" em vez de
+    // "[CARTAO_REDACTED]".
+    sanitized = sanitized.replace(/\b(?:\d[ -]*?){13,19}\b/g, (match) => {
+      const digits = match.replace(/\D/g, '');
+      if (/^[3456]/.test(digits) && digits.length >= 13) {
+        return '[CARTAO_REDACTED]';
+      }
+      return match;
+    });
+
     // CPF: 000.000.000-00 ou 00000000000
     sanitized = sanitized.replace(/\b\d{3}\.?\d{3}\.?\d{3}-?\d{2}\b/g, '[CPF_REDACTED]');
 
@@ -115,15 +127,6 @@ class PIIScrubber {
       /(?:\+?55\s?)?(?:\(?\d{2}\)?\s?)?(?:9\s?\d{4}|\d{4})[-\s]?\d{4}\b/g,
       '[TELEFONE_REDACTED]'
     );
-
-    // Cartão de crédito (sequências de 13-19 dígitos com espaços/hífens)
-    sanitized = sanitized.replace(/\b(?:\d[ -]*?){13,19}\b/g, (match) => {
-      const digits = match.replace(/\D/g, '');
-      if (/^[3456]/.test(digits) && digits.length >= 13) {
-        return '[CARTAO_REDACTED]';
-      }
-      return match;
-    });
 
     return sanitized;
   }

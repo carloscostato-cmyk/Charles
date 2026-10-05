@@ -127,6 +127,124 @@ body {
   animation: none;
 }
 
+/* ============================================================
+   ESTADOS VISUAIS DO ROBÔ (v4.2)
+   Antes o robô só tinha 2 estados (.listening). Agora comunica
+   o que está fazendo: pensando, falando, atendendo, erro.
+   ============================================================ */
+
+/* Pensando: leve inclinação,olhos "concentrados" */
+.robot-icon.thinking {
+  animation: think 1.6s ease-in-out infinite;
+}
+
+@keyframes think {
+  0%, 100% { transform: translateY(-2px) rotate(-1.5deg); }
+  50% { transform: translateY(-9px) rotate(1.5deg); }
+}
+
+/* Falando: leve pulsação de escala (combina com o lip-sync) */
+.robot-icon.speaking {
+  animation: speak-pulse 0.9s ease-in-out infinite;
+}
+
+@keyframes speak-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.045); }
+}
+
+/* Erro: tremor curto, chama atenção sem assustar */
+.robot-icon.error {
+  animation: shake 0.5s ease-in-out;
+  filter: drop-shadow(0 6px 20px rgba(204, 0, 0, 0.55));
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+
+/* Indicador de status acima do robô (funciona SEM animação) */
+.robot-status {
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid var(--primary);
+  color: var(--primary);
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+  z-index: 4;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.14);
+}
+
+/* Visível apenas quando há estado ativo */
+.robot-status.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.robot-status::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--primary);
+}
+
+/* Cada estado colore o seu próprio indicador */
+.robot-status[data-state="listening"]::before { background: #16a34a; }
+.robot-status[data-state="thinking"]::before { background: var(--primary); }
+.robot-status[data-state="speaking"]::before { background: #0284c7; }
+.robot-status[data-state="error"]::before { background: #dc2626; }
+
+/* Anel pulsante só no estado de escuta */
+.robot-status[data-state="listening"]::before {
+  animation: status-blink 1.2s ease-in-out infinite;
+}
+
+@keyframes status-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+/* ============ ACESSIBILIDADE: ALTERNATIVA SEM MOVIMENTO ============ */
+/*
+ * a11y.css desliga TODAS as animações em prefers-reduced-motion.
+ * Sem isto, quem usa acessibilidade perde 100% do feedback visual.
+ * Aqui o estado continua visível — muda só o Canal (sem animação).
+ */
+@media (prefers-reduced-motion: reduce) {
+  .robot-icon.thinking,
+  .robot-icon.speaking,
+  .robot-icon.error,
+  .robot-icon.listening {
+    animation: none;
+  }
+
+  /* Estados permanecem distinguíveis por cor e contorno */
+  .robot-icon.thinking { opacity: 0.88; }
+  .robot-icon.speaking { opacity: 1; outline: 2px solid #0284c7; outline-offset: 4px; border-radius: 50%; }
+  .robot-icon.error { opacity: 0.9; outline: 2px solid #dc2626; outline-offset: 4px; border-radius: 50%; }
+
+  .robot-status[data-state="listening"]::before {
+    animation: none;
+  }
+}
+
 /* ============ ONDAS SONORAS ============ */
 .sound-waves {
   position: absolute;

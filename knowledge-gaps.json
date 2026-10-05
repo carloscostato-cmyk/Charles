@@ -1,65 +1,5 @@
 [
   {
-    "id": 1,
-    "pergunta": "E aí tudo bem",
-    "motivo": "não encontrado na base",
-    "dataRegistro": "2026-07-31T14:13:55.688Z",
-    "ultimaVez": "2026-07-31T14:25:42.175Z",
-    "vezesPerguntada": 2,
-    "respondida": false,
-    "resposta": null
-  },
-  {
-    "id": 2,
-    "pergunta": "não quero saber quais são os documentos que você pode me mostrar",
-    "motivo": "não encontrado na base",
-    "dataRegistro": "2026-07-31T14:14:20.581Z",
-    "ultimaVez": "2026-07-31T14:14:20.581Z",
-    "vezesPerguntada": 1,
-    "respondida": false,
-    "resposta": null
-  },
-  {
-    "id": 3,
-    "pergunta": "Conte uma história longa sobre um data center e explique passo a passo as rotinas de backup e recuperação, incluindo exemplos.",
-    "motivo": "não encontrado na base",
-    "dataRegistro": "2026-07-31T14:17:25.673Z",
-    "ultimaVez": "2026-07-31T14:17:25.673Z",
-    "vezesPerguntada": 1,
-    "respondida": false,
-    "resposta": null
-  },
-  {
-    "id": 4,
-    "pergunta": "me escuta",
-    "motivo": "não encontrado na base",
-    "dataRegistro": "2026-07-31T14:18:33.938Z",
-    "ultimaVez": "2026-07-31T14:18:33.938Z",
-    "vezesPerguntada": 1,
-    "respondida": false,
-    "resposta": null
-  },
-  {
-    "id": 5,
-    "pergunta": "tudo bem",
-    "motivo": "não encontrado na base",
-    "dataRegistro": "2026-07-31T14:21:17.864Z",
-    "ultimaVez": "2026-07-31T14:21:17.864Z",
-    "vezesPerguntada": 1,
-    "respondida": false,
-    "resposta": null
-  },
-  {
-    "id": 6,
-    "pergunta": "Quais as informações você tem no fac",
-    "motivo": "não encontrado na base",
-    "dataRegistro": "2026-07-31T14:21:42.807Z",
-    "ultimaVez": "2026-07-31T14:21:42.807Z",
-    "vezesPerguntada": 1,
-    "respondida": false,
-    "resposta": null
-  },
-  {
     "id": 7,
     "pergunta": "Explique detalhadamente o procedimento de backup e recuperação de um data center, com exemplos e passos.",
     "motivo": "não encontrado na base",
@@ -70,111 +10,71 @@
     "resposta": null
   },
   {
-    "id": 8,
-    "pergunta": "Tensão de funk.",
-    "motivo": "não encontrado na base",
-    "dataRegistro": "2026-07-31T17:42:41.590Z",
-    "ultimaVez": "2026-07-31T17:42:41.590Z",
-    "vezesPerguntada": 1,
-    "respondida": false,
-    "resposta": null
-  },
-  {
-    "id": 9,
-    "pergunta": "Sua boca é em termos práticos para a gente também está para quem mais teria que o pequeno pelo?",
-    "motivo": "não encontrado na base",
-    "dataRegistro": "2026-07-31T17:42:54.608Z",
-    "ultimaVez": "2026-07-31T17:42:54.608Z",
-    "vezesPerguntada": 1,
-    "respondida": false,
-    "resposta": null
-  },
-  {
-    "id": 10,
-    "pergunta": "Eu quero saber sobre fax.",
-    "motivo": "não encontrado na base",
-    "dataRegistro": "2026-07-31T17:43:10.464Z",
-    "ultimaVez": "2026-07-31T17:43:10.464Z",
-    "vezesPerguntada": 1,
-    "respondida": false,
-    "resposta": null
-  },
-  {
-    "id": 11,
-    "pergunta": "O faq fala pra mim sobre faq.",
-    "motivo": "não encontrado na base",
-    "dataRegistro": "2026-07-31T17:43:36.298Z",
-    "ultimaVez": "2026-07-31T17:43:36.298Z",
-    "vezesPerguntada": 1,
-    "respondida": false,
-    "resposta": null
-  },
-  {
-    "id": 12,
-    "pergunta": "Não preciso deles no dada, tal.",
-    "motivo": "não encontrado na base",
-    "dataRegistro": "2026-07-31T17:43:48.187Z",
-    "ultimaVez": "2026-07-31T17:43:48.187Z",
-    "vezesPerguntada": 1,
-    "respondida": false,
-    "resposta": null
-  },
-  {
-    "id": 13,
-    "pergunta": "Sobre o fato.",
-    "motivo": "não encontrado na base",
-    "dataRegistro": "2026-07-31T17:51:03.228Z",
-    "ultimaVez": "2026-07-31T17:51:03.228Z",
-    "vezesPerguntada": 1,
-    "respondida": false,
-    "resposta": null
-  },
-  {
-    "id": 14,
-    "pergunta": "Vai receber o fato aqui é?",
-    "motivo": "não encontrado na base",
-    "dataRegistro": "2026-07-31T17:59:23.967Z",
-    "ultimaVez": "2026-07-31T17:59:23.967Z",
-    "vezesPerguntada": 1,
-    "respondida": false,
-    "resposta": null
-  },
-  {
-    "id": 15,
-    "pergunta": "Personagem do Santo ainda.",
-    "motivo": "não encontrado na base",
-    "dataRegistro": "2026-07-31T17:59:36.694Z",
-    "ultimaVez": "2026-07-31T17:59:36.694Z",
-    "vezesPerguntada": 1,
-    "respondida": false,
-    "resposta": null
-  },
-  {
-    "id": 16,
-    "pergunta": "teste",
-    "motivo": "não encontrado na base",
-    "dataRegistro": "2026-08-04T14:37:06.247Z",
-    "ultimaVez": "2026-08-13T20:40:08.482Z",
-    "vezesPerguntada": 47,
-    "respondida": false,
-    "resposta": null
-  },
-  {
-    "id": 17,
-    "pergunta": "pergunta aleatória sem resposta",
-    "motivo": "não encontrado na base",
-    "dataRegistro": "2026-08-04T14:37:06.301Z",
-    "ultimaVez": "2026-08-13T20:40:08.502Z",
-    "vezesPerguntada": 47,
-    "respondida": false,
-    "resposta": null
-  },
-  {
     "id": 18,
     "pergunta": "Qual é o procedimento para atualização do firmware?",
     "motivo": "teste",
     "dataRegistro": "2026-08-14T14:21:03.672Z",
     "ultimaVez": "2026-08-14T14:21:03.685Z",
+    "vezesPerguntada": 1,
+    "respondida": false,
+    "resposta": null
+  },
+  {
+    "id": 19,
+    "pergunta": "Explique como funciona o failover em data centers",
+    "motivo": "Resposta gerada apenas pelo LLM (fonte=llm), sem contexto específico da KB ou RAG.",
+    "dataRegistro": "2026-09-24T18:43:08.749Z",
+    "ultimaVez": "2026-10-02T14:43:05.202Z",
+    "vezesPerguntada": 9,
+    "respondida": false,
+    "resposta": null
+  },
+  {
+    "id": 20,
+    "pergunta": "Qual é o SLA do Data Center?",
+    "motivo": "Resposta gerada apenas pelo LLM (fonte=llm), sem contexto específico da KB ou RAG.",
+    "dataRegistro": "2026-09-24T18:43:08.972Z",
+    "ultimaVez": "2026-10-02T14:05:14.122Z",
+    "vezesPerguntada": 7,
+    "respondida": false,
+    "resposta": null
+  },
+  {
+    "id": 21,
+    "pergunta": "O que é um Data Center Tier III?",
+    "motivo": "Resposta gerada apenas pelo LLM (fonte=llm), sem contexto específico da KB ou RAG.",
+    "dataRegistro": "2026-09-24T18:43:09.258Z",
+    "ultimaVez": "2026-10-02T14:05:14.298Z",
+    "vezesPerguntada": 7,
+    "respondida": false,
+    "resposta": null
+  },
+  {
+    "id": 22,
+    "pergunta": "Ol�, como vai?",
+    "motivo": "Resposta gerada apenas pelo LLM (fonte=llm-fallback), sem contexto específico da KB ou RAG.",
+    "dataRegistro": "2026-09-24T20:03:07.446Z",
+    "ultimaVez": "2026-09-24T20:03:46.666Z",
+    "vezesPerguntada": 2,
+    "respondida": false,
+    "resposta": null
+  },
+  {
+    "id": 23,
+    "pergunta": "Como solicitar acesso ao Data Center?",
+    "motivo": "Resposta gerada apenas pelo LLM (fonte=llm-fallback), sem contexto específico da KB ou RAG.",
+    "dataRegistro": "2026-09-24T20:19:27.900Z",
+    "ultimaVez": "2026-09-24T20:19:27.900Z",
+    "vezesPerguntada": 1,
+    "respondida": true,
+    "resposta": "Para solicitar acesso ao Data Center, é necessário abrir chamado na central de serviços."
+  },
+  {
+    "id": 24,
+    "pergunta": "Voz de mulher, porque Mano, que aconteceu?",
+    "motivo": "Resposta gerada apenas pelo LLM (fonte=llm-fallback), sem contexto específico da KB ou RAG.",
+    "dataRegistro": "2026-10-01T18:29:45.672Z",
+    "ultimaVez": "2026-10-01T18:29:45.672Z",
     "vezesPerguntada": 1,
     "respondida": false,
     "resposta": null

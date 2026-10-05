@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Charles — Apresentação Corporativa | Data Center Claro</title>
+<style>
+/* ==== CHARLES DESIGN SYSTEM — tema escuro premium ==== */
+:root{
+  --red:#e4002b; --red-2:#ff2d55; --red-soft:rgba(228,0,43,.12);
+  --ink:#0a0e17; --line:rgba(255,255,255,.08);
+  --txt:#f4f6fb; --txt-2:#a8b3c7; --txt-3:#6b7688;
+  --ok:#10b981; --warn:#f59e0b; --info:#3b82f6;
+  --r:20px; --shadow:0 24px 60px rgba(0,0,0,.45);
+  --font:'Segoe UI',system-ui,-apple-system,sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{background:var(--ink);color:var(--txt);font-family:var(--font);overflow:hidden}
+
+.deck{height:100vh;width:100vw;position:relative}
+.slide{position:absolute;inset:0;opacity:0;visibility:hidden;
+  transition:opacity .55s cubic-bezier(.4,0,.2,1),transform .55s cubic-bezier(.4,0,.2,1);
+  transform:scale(.985);display:flex;align-items:center;justify-content:center;
+  padding:3.2vh 4vw;overflow-y:auto}
+.slide.on{opacity:1;visibility:visible;transform:scale(1)}
+.wrap{width:100%;max-width:1280px}
+
+/* backdrop animado */
+.bg{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.orb{position:absolute;border-radius:50%;filter:blur(90px);opacity:.30}
+.orb.a{width:620px;height:620px;background:radial-gradient(circle,var(--red),transparent 70%);top:-12%;left:-8%;animation:f1 22s ease-in-out infinite}
+.orb.b{width:520px;height:520px;background:radial-gradient(circle,#3b82f6,transparent 70%);bottom:-14%;right:-6%;animation:f2 26s ease-in-out infinite}
+.orb.c{width:400px;height:400px;background:radial-gradient(circle,#10b981,transparent 70%);top:45%;left:55%;animation:f1 30s ease-in-out infinite reverse}
+.grid-bg{position:absolute;inset:0;
+  background-image:linear-gradient(rgba(255,255,255,.022) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.022) 1px,transparent 1px);
+  background-size:56px 56px;
+  -webkit-mask-image:radial-gradient(ellipse 80% 70% at 50% 40%,#000,transparent);
+          mask-image:radial-gradient(ellipse 80% 70% at 50% 40%,#000,transparent)}
+@keyframes f1{0%,100%{transform:translate(0,0)}50%{transform:translate(70px,50px)}}
+@keyframes f2{0%,100%{transform:translate(0,0)}50%{transform:translate(-60px,-45px)}}
+@keyframes charlesFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
+@keyframes haloPulse{0%,100%{opacity:.35;transform:scale(1)}50%{opacity:.6;transform:scale(1.06)}}
+
+/* tipografia */
+.eyebrow{font-size:.72rem;letter-spacing:.24em;text-transform:uppercase;color:var(--red-2);font-weight:700;margin-bottom:1rem}
+h1{font-size:clamp(2.6rem,6vw,5rem);font-weight:800;line-height:1.02;letter-spacing:-.03em}
+h2{font-size:clamp(1.9rem,3.6vw,3.1rem);font-weight:800;line-height:1.1;letter-spacing:-.02em;margin-bottom:.7rem}
+h3{font-size:1.12rem;font-weight:700;margin-bottom:.4rem}
+p{color:var(--txt-2);line-height:1.65;font-size:1rem}
+.lead{font-size:clamp(1.05rem,1.7vw,1.32rem);line-height:1.6;color:#d7dfec}
+.hl{background:linear-gradient(135deg,var(--red-2),#ff6b8a);-webkit-background-clip:text;background-clip:text;color:transparent}
+.muted{color:var(--txt-3)}
+</style>
+<style>
+/* cards */
+.card{background:linear-gradient(145deg,rgba(255,255,255,.055),rgba(255,255,255,.018));
+  border:1px solid var(--line);border-radius:var(--r);padding:1.6rem;backdrop-filter:blur(14px);
+  transition:transform .3s,border-color .3s,box-shadow .3s}
+.card:hover{transform:translateY(-5px);border-color:rgba(228,0,43,.4);box-shadow:0 18px 44px rgba(228,0,43,.16)}
+.grid{display:grid;gap:1.1rem}
+.g2{grid-template-columns:repeat(2,1fr)}
+.g3{grid-template-columns:repeat(3,1fr)}
+.g4{grid-template-columns:repeat(4,1fr)}
+@media(max-width:900px){.g3,.g4{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){.g2,.g3,.g4{grid-template-columns:1fr}}
+
+/* métricas */
+.metric{text-align:center;padding:1.5rem 1rem}
+.metric .num{font-size:clamp(2.4rem,5vw,3.6rem);font-weight:800;letter-spacing:-.04em;line-height:1;
+  background:linear-gradient(135deg,#fff,#c8d2e4);-webkit-background-clip:text;background-clip:text;color:transparent}
+.metric .num.ok{background:linear-gradient(135deg,#34d399,#059669);-webkit-background-clip:text;background-clip:text;color:transparent}
+.metric .num.red{background:linear-gradient(135deg,#ff6b8a,var(--red));-webkit-background-clip:text;background-clip:text;color:transparent}
+.metric .lbl{font-size:.82rem;color:var(--txt-3);margin-top:.55rem;font-weight:600;letter-spacing:.04em}
+.metric .sub{font-size:.72rem;color:var(--txt-3);margin-top:.2rem;opacity:.8}
+
+/* badges */
+.badge{display:inline-flex;align-items:center;gap:.4rem;padding:.34rem .8rem;border-radius:999px;
+  font-size:.74rem;font-weight:700;letter-spacing:.03em;border:1px solid}
+.b-ok{background:rgba(16,185,129,.12);color:#34d399;border-color:rgba(16,185,129,.3)}
+.b-warn{background:rgba(245,158,11,.12);color:#fbbf24;border-color:rgba(245,158,11,.3)}
+.b-info{background:rgba(59,130,246,.12);color:#60a5fa;border-color:rgba(59,130,246,.3)}
+.b-red{background:var(--red-soft);color:#ff6b8a;border-color:rgba(228,0,43,.3)}
+
+/* navegação */
+.nav{position:fixed;bottom:1.5vh;left:50%;transform:translateX(-50%);z-index:100;
+  display:flex;align-items:center;gap:.5rem;background:rgba(10,14,23,.75);backdrop-filter:blur(20px);
+  padding:.5rem .8rem;border-radius:999px;border:1px solid var(--line);box-shadow:var(--shadow)}
+.nav button{background:none;border:none;color:var(--txt-2);cursor:pointer;font-size:1.05rem;
+  width:32px;height:32px;border-radius:50%;transition:.2s;display:grid;place-items:center}
+.nav button:hover{background:var(--red-soft);color:#fff}
+.dots{display:flex;gap:.35rem;padding:0 .4rem}
+.dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.2);cursor:pointer;transition:.3s}
+.dot.on{background:var(--red);width:22px;border-radius:4px}
+.counter{color:var(--txt-3);font-size:.78rem;font-variant-numeric:tabular-nums;padding:0 .5rem;font-weight:700}
+
+/* tabela */
+table{width:100%;border-collapse:collapse;font-size:.92rem}
+th{text-align:left;padding:.85rem .9rem;color:var(--txt-3);font-size:.72rem;text-transform:uppercase;
+  letter-spacing:.1em;border-bottom:1px solid var(--line);font-weight:700}
+td{padding:.85rem .9rem;border-bottom:1px solid rgba(255,255,255,.045);color:var(--txt-2)}
+tr:hover td{background:rgba(255,255,255,.022)}
+.yes{color:#34d399;font-weight:700}
+.no{color:#f87171;font-weight:700}
+.part{color:#fbbf24;font-weight:700}
+</style>
+</head>
+<div class="bg"><div class="orb a"></div><div class="orb b"></div><div class="orb c"></div><div class="grid-bg"></div></div>
+<div class="deck" id="deck">
+
+<!-- ============ CAPA ============ -->
+<section class="slide">
+ <div class="wrap" style="text-align:center">
+  <img src="assets/charles.jpg" alt="Charles — Assistente de IA do Data Center"
+       style="width:230px;height:auto;margin-bottom:1.6rem;border-radius:24px;
+              box-shadow:0 0 0 1px rgba(255,255,255,.09),0 26px 70px rgba(228,0,43,.45);
+              animation:charlesFloat 4s ease-in-out infinite">
+  <div class="eyebrow">Claro Empresas · Departamento de Data Center</div>
+  <h1>Conheça o <span class="hl">Charles</span></h1>
+  <p class="lead" style="max-width:760px;margin:1.4rem auto 2rem">
+   Não é um chatbot genérico. É um <strong>especialista em Data Center e Operações NOC</strong>
+   que conhece a sua infraestrutura, cita a fonte de cada resposta
+   e <strong>nunca inventa</strong> o que não tem como provar.
+  </p>
+  <div style="display:flex;gap:.7rem;justify-content:center;flex-wrap:wrap">
+   <span class="badge b-ok">0% de alucinação</span>
+   <span class="badge b-info">100% com citação</span>
+   <span class="badge b-red">ISO/IEC 42001</span>
+   <span class="badge b-ok">159 itens de FAQ</span>
+  </div>
+ </div>
+</section>
+
+<!-- ============ PROBLEMA ============ -->
+<section class="slide">
+ <div class="wrap">
+  <div class="eyebrow">O problema</div>
+  <h2>Um chatbot genérico <span class="hl">não sabe o que é um Data Center</span></h2>
+  <p class="lead" style="max-width:900px;margin-bottom:2rem">
+   Coloque qualquer assistente de IA para responder uma pergunta operacional.
+   Ele pode responder — mas <strong>sem garantir que esteja certo</strong>.
+  </p>
+  <div class="grid g3">
+   <div class="card"><h3>Sem a sua base</h3>
+     <p>Não conhece seus procedimentos, seus runbooks, o histórico da sua unidade nem a particularidade do seu ambiente.</p></div>
+   <div class="card"><h3>Sem citar a fonte</h3>
+     <p>Responde com a mesma segurança um fato confirmado e uma suposição. Você não consegue auditar o que ele disse.</p></div>
+   <div class="card"><h3>Inventa com confiança</h3>
+     <p>Quando não sabe, preenche a lacuna — com a mesma fluência de quando está certo. Esse é o risco real.</p></div>
+  </div>
+  <div class="card" style="margin-top:1.6rem;border-left:3px solid var(--red)">
+   <p style="font-size:1.08rem;color:#d7dfec">
+     O risco não é ele errar. É errar <strong style="color:#fff">parecendo estar certo</strong>
+     — durante um incidente, quando não há tempo de conferir.
+   </p>
+  </div>
+ </div>
+</section>
+<body>
+<!-- ============ QUEM É CHARLES ============ -->
+<section class="slide">
+ <div class="wrap" style="text-align:center">
+  <div class="eyebrow">Quem é</div>
+  <h2>Um assistente que <span class="hl">conhece o seu ambiente</span></h2>
+  <div style="display:flex;align-items:center;justify-content:center;gap:3rem;margin:2.4rem 0;flex-wrap:wrap">
+   <div style="position:relative">
+    <div style="position:absolute;inset:-26px;border-radius:50%;
+      background:radial-gradient(circle,rgba(228,0,43,.42),transparent 70%);animation:haloPulse 3.4s ease-in-out infinite"></div>
+    <img src="assets/charles.jpg" alt="Charles"
+         style="position:relative;width:190px;height:auto;border-radius:22px;
+                box-shadow:0 0 0 1px rgba(255,255,255,.10),0 22px 60px rgba(228,0,43,.42);
+                animation:charlesFloat 4s ease-in-out infinite">
+   </div>
+   <div style="max-width:560px;text-align:left">
+    <h3>O que o Charles é</h3>
+    <p style="margin-bottom:.9rem">Um especialista de Data Center e Operações NOC que trabalha com
+      a documentação real da organização — e cita a fonte de tudo que responde.</p>
+    <h3>O que ele não é</h3>
+    <p>Não é um modelo geral treinado na internet. Não "sabe de tudo" —
+      e é justamente por isso que ele não erra sobre o que não tem.</p>
+   </div>
+  </div>
+  <div class="grid g3" style="max-width:1000px;margin:0 auto">
+   <div class="card metric"><div class="num">159</div><div class="lbl">Itens de FAQ na base</div><div class="sub">documentação real</div></div>
+   <div class="card metric"><div class="num">11</div><div class="lbl">Data Centers mapeados</div><div class="sub">endereço e telefone</div></div>
+   <div class="card metric"><div class="num ok">0%</div><div class="lbl">Alucinação</div><div class="sub">medida em 26 ciclos</div></div>
+  </div>
+ </div>
+</section>
+
+<!-- ============ NÚMEROS ============ -->
+<section class="slide">
+ <div class="wrap">
+  <div class="eyebrow">Números que não são opinião</div>
+  <h2>O que o <span class="hl">Charles já provou</span></h2>
+  <p class="lead" style="margin-bottom:2rem">Medidos automaticamente pelo agente de qualidade, 26 vezes.</p>
+  <div class="grid g4">
+   <div class="card metric"><div class="num ok">0%</div>
+     <div class="lbl">Alucinação</div><div class="sub">meta: ≤ 5%</div></div>
+   <div class="card metric"><div class="num ok">100%</div>
+     <div class="lbl">Taxa de citação</div><div class="sub">toda resposta com fonte</div></div>
+   <div class="card metric"><div class="num">100%</div>
+     <div class="lbl">Precisão do retrieval</div><div class="sub">acerta a fonte</div></div>
+   <div class="card metric"><div class="num ok">100%</div>
+     <div class="lbl">Conversa humana</div><div class="sub">métrica nova</div></div>
+  </div>
+  <div class="grid g4" style="margin-top:1.1rem">
+   <div class="card metric"><div class="num">159</div>
+     <div class="lbl">Itens de FAQ</div><div class="sub">base real indexada</div></div>
+   <div class="card metric"><div class="num">11</div>
+     <div class="lbl">Data Centers</div><div class="sub">endereço e telefone</div></div>
+   <div class="card metric"><div class="num">211</div>
+     <div class="lbl">Interações auditadas</div><div class="sub">com rastro completo</div></div>
+   <div class="card metric"><div class="num">302</div>
+     <div class="lbl">Testes automatizados</div><div class="sub">todos passando</div></div>
+  </div>
+ </div>
+</section>
+
+<!-- ============ EVOLUÇÃO ============ -->
+<section class="slide">
+ <div class="wrap">
+  <div class="eyebrow">A evolução</div>
+  <h2>De <span style="color:#f87171">50%</span> para <span class="hl">0%</span> de alucinação</h2>
+  <p class="lead" style="margin-bottom:2.4rem">Não foi sorte. Foi medição, correção e nova medição — 26 ciclos em 8 dias.</p>
+  <div class="card" style="padding:2rem 1.6rem">
+   <svg viewBox="0 0 900 240" style="width:100%;height:auto">
+    <line x1="50" y1="200" x2="870" y2="200" stroke="rgba(255,255,255,.12)"/>
+    <line x1="50" y1="120" x2="870" y2="120" stroke="rgba(255,255,255,.06)"/>
+    <line x1="50" y1="40" x2="870" y2="40" stroke="rgba(255,255,255,.06)"/>
+    <text x="38" y="44" fill="#6b7688" font-size="12" text-anchor="end">50%</text>
+    <text x="38" y="124" fill="#6b7688" font-size="12" text-anchor="end">25%</text>
+    <text x="38" y="204" fill="#6b7688" font-size="12" text-anchor="end">0%</text>
+    <line x1="50" y1="184" x2="870" y2="184" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="6 5" opacity=".7"/>
+    <text x="866" y="178" fill="#f59e0b" font-size="11" text-anchor="end">meta ≤5%</text>
+    <polyline fill="none" stroke="#ff2d55" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"
+      points="70,40 160,184 250,152 340,184 430,184 520,184 610,184 700,184 790,184"/>
+    <g fill="#ff2d55">
+     <circle cx="70" cy="40" r="6"/><circle cx="160" cy="184" r="5"/><circle cx="250" cy="152" r="5"/>
+     <circle cx="340" cy="184" r="5"/><circle cx="430" cy="184" r="5"/><circle cx="520" cy="184" r="5"/>
+     <circle cx="610" cy="184" r="5"/><circle cx="700" cy="184" r="5"/>
+    </g>
+    <circle cx="790" cy="184" r="9" fill="#10b981"/>
+    <circle cx="790" cy="184" r="14" fill="#10b981" opacity=".22">
+     <animate attributeName="r" values="10;22;10" dur="2.4s" repeatCount="indefinite"/>
+     <animate attributeName="opacity" values=".3;0;.3" dur="2.4s" repeatCount="indefinite"/></circle>
+    <text x="790" y="166" fill="#10b981" font-size="15" font-weight="700" text-anchor="middle">0%</text>
+    <text x="70" y="222" fill="#6b7688" font-size="11" text-anchor="middle">início</text>
+    <text x="790" y="222" fill="#6b7688" font-size="11" text-anchor="middle">hoje</text>
+   </svg>
+  </div>
+  <div class="grid g3" style="margin-top:1.2rem">
+   <div class="card"><h3>Detectado</h3><p>O agente de qualidade mediu 50% de alucinação e sinalizou como risco crítico.</p></div>
+   <div class="card"><h3>Corrigido</h3><p>Prompt mestre desbloqueado — a personalidade do Charles nunca era enviada ao modelo.</p></div>
+   <div class="card"><h3>Comprovado</h3><p>Três medições consecutivas em 0%. O resultado se mantém, não foi acaso.</p></div>
+  </div>
+ </div>
+</section>
+<!-- ============ COMPARATIVO ============ -->
+<section class="slide">
+ <div class="wrap">
+  <div class="eyebrow">Comparativo</div>
+  <h2>Não é ser "melhor que o ChatGPT".<br>É ser o <span class="hl">certo para o seu contexto</span></h2>
+  <p class="lead" style="margin-bottom:1.6rem">Um assistente generalista e um especialista têm propósitos diferentes. A comparação honesta:</p>
+  <div class="card" style="padding:0;overflow:hidden">
+  <table>
+   <thead><tr><th style="width:30%">Critério</th><th style="width:23%">Assistente generalista</th><th style="width:23%">Busca corporativa</th><th style="width:24%;color:#ff6b8a">Charles</th></tr></thead>
+   <tbody>
+    <tr><td>Conhece a base interna</td><td class="no">Não</td><td class="part">Parcial</td><td class="yes">Sim — 159 itens</td></tr>
+    <tr><td>Cita a fonte da resposta</td><td class="no">Não</td><td class="no">Não</td><td class="yes">Sempre</td></tr>
+    <tr><td>Auditoria de conformidade</td><td class="no">Não</td><td class="no">Não</td><td class="yes">ISO 42001</td></tr>
+    <tr><td>Dados dos Data Centers</td><td class="no">Genérico</td><td class="part">Públicos</td><td class="yes">Internos</td></tr>
+    <tr><td>Diz quando não sabe</td><td class="part">Às vezes</td><td class="no">Raramente</td><td class="yes">Sempre</td></tr>
+    <tr><td>Retrato de evidências</td><td class="no">Não</td><td class="no">Não</td><td class="yes">100% auditável</td></tr>
+    <tr><td>Custo por conversa</td><td class="part"> $$$</td><td class="part"> $$</td><td class="yes">Gratuito</td></tr>
+    <tr><td>Conhecimento geral do mundo</td><td class="yes">Excelente</td><td class="part">Bom</td><td class="no">Restrito ao DC</td></tr>
+   </tbody>
+  </table>
+  </div>
+  <div class="card" style="margin-top:1.2rem;border-left:3px solid var(--ok)">
+   <p style="color:#d7dfec">
+     <strong style="color:#fff">A escolha não é Charles <em>ou</em> o ChatGPT.</strong>
+     São camadas diferentes: o assistente generalista para o conhecimento amplo,
+     o Charles para <strong style="color:#fff">o que precisa de fonte e não pode errar</strong>.
+   </p>
+  </div>
+ </div>
+</section>
+
+<!-- ============ ESPECIALISTAS ============ -->
+<section class="slide">
+ <div class="wrap">
+  <div class="eyebrow">Arquitetura</div>
+  <h2>Cinco especialistas que <span class="hl">nunca inventam endereço</span></h2>
+  <p class="lead" style="margin-bottom:1.8rem">Quando a resposta vem de dado estruturado, ela não vem de adivinhação — vem da planilha.</p>
+  <div class="grid g3" style="margin-bottom:1.1rem">
+   <div class="card"><h3>📍 Localização</h3><p>Endereço, CEP, bairro e cidade das 11 unidades.</p></div>
+   <div class="card"><h3>📞 Contato</h3><p>Telefone e ramal de cada Data Center.</p></div>
+   <div class="card"><h3>🗂 Diretório</h3><p>Lista completa e atualizada das unidades.</p></div>
+   <div class="card"><h3>🌎 Região</h3><p>Cobertura por região e estado.</p></div>
+   <div class="card"><h3>🛡 Disponibilidade</h3><p>Encaminha para a fonte oficial — <strong>nunca inventa status</strong>.</p></div>
+   <div class="card" style="border-color:rgba(16,185,129,.35);background:linear-gradient(145deg,rgba(16,185,129,.10),rgba(255,255,255,.018))">
+    <span class="badge b-ok">DIFERENCIAL</span>
+    <h3 style="margin-top:.7rem">211 conversas auditadas</h3>
+    <p>58% vieram de dado estruturado — onde alucinação é matematicamente impossível.</p></div>
+  </div>
+  <div style="text-align:center">
+   <span class="badge b-info">RAG semântico</span>
+   <span class="badge b-info">4 ferramentas</span>
+   <span class="badge b-info">Memória de sessão</span>
+   <span class="badge b-info">Qualidade automática</span>
+  </div>
+ </div>
+</section>
+<!-- ============ CONVERSA HUMANA ============ -->
+<section class="slide">
+ <div class="wrap">
+  <div class="eyebrow">Conversa</div>
+  <h2>Especialista <em>e</em> <span class="hl">pessoa</span></h2>
+  <p class="lead" style="max-width:900px;margin-bottom:2rem">
+   Um assistente que responde tudo com relatório técnico cansa. O Charles sabe
+   conversar — e sabe a hora certa de ser técnico.
+  </p>
+  <div class="grid g2">
+   <div class="card">
+    <span class="badge b-ok">CONVERSA</span>
+    <h3 style="margin:.8rem 0 .6rem">O que ele faz</h3>
+    <p style="margin-bottom:.6rem">Reconhece o horário e <strong style="color:#fff">cumprimenta corretamente</strong>.</p>
+    <p style="margin-bottom:.6rem">Sobre clima, diz com honestidade <em>o que não sabe</em> — em vez de inventar.</p>
+    <p style="margin-bottom:.6rem">Para a execução quando você interrompe.</p>
+    <p>Redireciona assunto fora de escopo para o domínio, sem ser grosseiro.</p>
+   </div>
+   <div class="card">
+    <span class="badge b-red">TRABALHO TÉCNICO</span>
+    <h3 style="margin:.8rem 0 .6rem">O que ele não faz</h3>
+    <p style="margin-bottom:.6rem">Não inventa previsão do tempo.</p>
+    <p style="margin-bottom:.6rem">Não afirma que um Data Center está "operacional" <strong style="color:#fff">sem consultar a fonte</strong>.</p>
+    <p style="margin-bottom:.6rem">Não usa formato de relatório em conversa fiada.</p>
+    <p>Não toma decisão que substitua o judgement do Analista.</p>
+   </div>
+  </div>
+  <div class="card" style="margin-top:1.2rem;border-left:3px solid var(--red)">
+   <p style="color:#d7dfec"><strong style="color:#fff">Calor humano + rigor técnico.</strong>
+   Essa combinação não é oferecida por ferramenta genérica — é o que sustenta uma decisão operacional.</p>
+  </div>
+ </div>
+</section>
+
+<!-- ============ SEGURANÇA ============ -->
+<section class="slide">
+ <div class="wrap">
+  <div class="eyebrow">Governança</div>
+  <h2>Conformidade <span class="hl">ISO/IEC 42001:2023</span></h2>
+  <p class="lead" style="margin-bottom:1.8rem">O único ativo com nota alta é o próprio Charles. Isto é o que sustenta.</p>
+  <div class="grid g4">
+   <div class="card metric"><div class="num">17</div><div class="lbl">Documentos de governança</div><div class="sub">antes: 0</div></div>
+   <div class="card metric"><div class="num ok">33</div><div class="lbl">Testes de conformidade</div><div class="sub">regressão contínua</div></div>
+   <div class="card metric"><div class="num ok">100%</div><div class="lbl">Respostas com fonte</div><div class="sub">rastreabilidade</div></div>
+   <div class="card metric"><div class="num">302</div><div class="lbl">Testes no total</div><div class="sub">todos verdes</div></div>
+  </div>
+  <div class="grid g2" style="margin-top:1.2rem">
+   <div class="card"><h3>Proteção de dados (LGPD)</h3>
+     <p>CPF, CNPJ, cartão, e-mail e telefone mascarados na entrada. Acesso por papéis (RBAC) via Entra ID.</p></div>
+   <div class="card"><h3>Rastreabilidade</h3>
+     <p>Cada interação registra fonte, agente usado e nota de qualidade — permitindo auditoria de cada resposta.</p></div>
+   <div class="card"><h3>Prompt injection</h3>
+     <p>Detecção ativa de tentativas de extrair o prompt ou burlar regras de segurança.</p></div>
+   <div class="card"><h3>Limites explícitos</h3>
+     <p>Documento que declara o que o Charles <em>faz e não faz</em>, revisado pela gestão.</p></div>
+  </div>
+ </div>
+</section>
+<!-- ============ O GAP — CTA ============ -->
+<section class="slide">
+ <div class="wrap">
+  <div class="eyebrow">Onde Precisamos de Você</div>
+  <h2>O único item que <span class="hl">segura a nota do Charles</span> é a FAQ</h2>
+  <p class="lead" style="max-width:960px;margin-bottom:2rem">
+   O Charles está tecnicamente pronto para responder o que <strong>ele sabe</strong>.
+   O que ainda não está pronto é o <strong>conhecimento das outras áreas</strong>.
+  </p>
+  <div class="grid g2" style="margin-bottom:1.2rem">
+   <div class="card" style="border-color:rgba(16,185,129,.35)">
+    <span class="badge b-ok">PRONTO</span>
+    <div style="display:flex;align-items:baseline;gap:.6rem;margin:1rem 0 .4rem">
+     <span style="font-size:3rem;font-weight:800;color:#34d399">100%</span>
+     <span class="muted">alucinação · citação · retrieval</span>
+    </div>
+    <p>A máquina está pronta. Medindo e corrigindo sozinha, 26 vezes.</p>
+   </div>
+   <div class="card" style="border-color:rgba(245,158,11,.4)">
+    <span class="badge b-warn">DEPENDE DE VOCÊS</span>
+    <div style="display:flex;align-items:baseline;gap:.6rem;margin:1rem 0 .4rem">
+     <span style="font-size:3rem;font-weight:800;color:#fbbf24">14%</span>
+     <span class="muted">cobertura das dúvidas</span>
+    </div>
+    <p><strong style="color:#fff">86% das perguntas que chegam, ele ainda não sabe responder.</strong> Não é limitação da ferramenta — é conteúdo que falta na base.</p>
+   </div>
+  </div>
+  <div class="card" style="border-left:3px solid var(--red)">
+   <h3>Como cada área ajuda</h3>
+   <div class="grid g3" style="margin-top:1rem">
+    <div><strong style="color:#fff">1. Responde as dúvidas</strong>
+      <p style="font-size:.92rem">Cada pergunta que o Charles <em>não sabe</em> gera um relatório de lacuna. A resposta vira item de FAQ.</p></div>
+    <div><strong style="color:#fff">2. Revisa o que ele responde</strong>
+      <p style="font-size:.92rem">Se a resposta está errada ou desatualizada, o item é corrigido e ele aprende com o dono do processo.</p></div>
+    <div><strong style="color:#fff">3. Assina como owner</strong>
+      <p style="font-size:.92rem">Cada procedimento validado por quem é o responsável técnico ganha peso e confiança na resposta.</p></div>
+   </div>
+  </div>
+ </div>
+</section>
+
+<!-- ============ ENCERRAMENTO ============ -->
+<section class="slide">
+ <div class="wrap" style="text-align:center">
+  <img src="assets/charles.jpg" alt="Charles"
+       style="width:170px;height:auto;margin-bottom:1.4rem;border-radius:20px;
+              box-shadow:0 0 0 1px rgba(255,255,255,.09),0 20px 54px rgba(228,0,43,.42);
+              animation:charlesFloat 4s ease-in-out infinite">
+  <h2 style="font-size:clamp(1.8rem,4vw,3rem)">O Charles só é tão bom<br>quanto o <span class="hl">conhecimento que vocês alimentam</span></h2>
+  <p class="lead" style="max-width:800px;margin:1.4rem auto 2rem">
+   A ferramenta está pronta, auditada e medindo o próprio desempenho.
+   Falta o conteúdo de vocês — que só vocês têm.
+  </p>
+  <div style="display:flex;gap:.7rem;justify-content:center;flex-wrap:wrap">
+   <span class="badge b-ok">0% alucinação</span>
+   <span class="badge b-info">100% rastreável</span>
+   <span class="badge b-red">ISO 42001</span>
+  </div>
+  <p class="muted" style="margin-top:2.4rem;font-size:.9rem">
+   Charles · Especialista em Data Center e Operações NOC<br>
+   <span style="opacity:.7">Claro Empresas · Departamento de Data Center</span>
+  </p>
+ </div>
+</section>
+
+</div>
+<div class="nav">
+  <button onclick="go(-1)" title="Anterior">‹</button>
+  <div class="dots" id="dots"></div>
+  <span class="counter" id="counter"></span>
+  <button onclick="go(1)" title="Próximo">›</button>
+  <button onclick="print()" title="Exportar PDF">⎙</button>
+</div>
+<script>
+const slides=[...document.querySelectorAll('.slide')];let cur=0;
+const dots=document.getElementById('dots');const ctr=document.getElementById('counter');
+slides.forEach((_,i)=>{const d=document.createElement('div');d.className='dot';d.onclick=()=>go(i);dots.appendChild(d)});
+function show(i){cur=Math.max(0,Math.min(slides.length-1,i));
+ slides.forEach((s,n)=>s.classList.toggle('on',n===cur));
+ [...dots.children].forEach((d,n)=>d.classList.toggle('on',n===cur));
+ ctr.textContent=(cur+1)+' / '+slides.length;}
+function go(d){show(cur+d)}
+document.addEventListener('keydown',e=>{
+ if(e.key==='ArrowRight'||e.key==='PageDown'||e.key===' '){e.preventDefault();go(1)}
+ if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();go(-1)}
+ if(e.key==='Home')show(0); if(e.key==='End')show(slides.length-1)});
+let x0=null;
+addEventListener('touchstart',e=>x0=e.touches[0].clientX,{passive:true});
+addEventListener('touchend',e=>{if(x0===null)return;const d=e.changedTouches[0].clientX-x0;
+ if(Math.abs(d)>50)go(d<0?1:-1);x0=null},{passive:true});
+show(0);
+
+/* Tela cheia (F) — ideal para projetar */
+document.addEventListener('keydown',e=>{
+  if(e.key==='f'||e.key==='F'){
+    if(!document.fullscreenElement){document.documentElement.requestFullscreen?.()}
+    else{document.exitFullscreen?.()}
+  }
+});
+</script>
+</body>
+</html>

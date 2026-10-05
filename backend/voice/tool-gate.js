@@ -70,7 +70,7 @@ class ToolGate {
         estimatedDuration: 200,
         execute: async () => {
           const { getKnowledgeBase } = require('../knowledge-base');
-          const kb = getKnowledgeBase();
+          const kb = await getKnowledgeBase();
           return kb.search(query, 5);
         }
       });

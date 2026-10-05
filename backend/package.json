@@ -22,7 +22,20 @@
     "ci:all": "npm run test:ci && npm run guardians:check && npm audit --audit-level=high",
     "pdf:index": "node ../scripts/pdf-routine.js index",
     "pdf:ask": "node ../scripts/pdf-routine.js ask",
-    "pdf:list": "node ../scripts/pdf-routine.js list"
+    "ecc": "node ecc/scripts/ecc.js",
+    "ecc:list": "node ecc/scripts/ecc.js list-installed",
+    "ecc:doctor": "node ecc/scripts/ecc.js doctor",
+    "ecc:repair": "node ecc/scripts/ecc.js repair",
+    "ecc:status": "node ecc/scripts/ecc.js status",
+    "ecc:consult": "node ecc/scripts/ecc.js consult",
+    "ecc:update": "node ecc/scripts/ecc.js auto-update",
+    "ecc:agents": "node ecc/scripts/ecc.js run agent list",
+    "ecc:skills": "node ecc/scripts/ecc.js run skill list",
+    "ecc:rules:js": "node ecc/scripts/ecc.js run lint check --type javascript",
+    "ecc:fix:js": "node ecc/scripts/ecc.js run lint fix --type javascript",
+    "pdf:list": "node ../scripts/pdf-routine.js list",
+    "iso:planilhas": "node scripts/gerar-planilhas-iso.js",
+    "ppt:charles": "node scripts/gerar-ppt-charles.js"
   },
   "dependencies": {
     "better-sqlite3": "^13.0.2",

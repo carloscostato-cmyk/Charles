@@ -12,6 +12,9 @@ backend/node_modules/
 *.db-shm
 *.db-wal
 
+# Runtime data directory (SQLite + generated reports are recreated on boot)
+data/
+
 # Logs and test reports
 *.log
 coverage/
@@ -26,3 +29,23 @@ Thumbs.db
 # Generated archives and temporary files
 *.zip
 *.tmp
+
+# Backup files created by editors/tools
+*.bak
+
+# External repositories and agent tooling cloned inside the workspace
+# (dify-main/ = upstream Dify repo, ecc-temp/ = ECC clone, .kilo/ = agent worktrees)
+dify-main/
+ecc-temp/
+.kilo/
+
+# SharePoint page snapshots ("Salvar pagina como") - not part of the app
+Data Center SD – Home.html
+Data Center SD – Home_files/
+
+# Test/agent run artifacts
+jest-run.txt
+jest-baseline.txt
+agent-run*.log
+chat-historico-curto.json
+knowledge-gaps.backup-*.json

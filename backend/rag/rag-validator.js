@@ -16,7 +16,7 @@
 // Limiares de confiança (ajustáveis)
 const THRESHOLDS = {
   // Score mínimo para considerar um documento relevante
-  MIN_RELEVANCE_SCORE: 0.25,
+  MIN_RELEVANCE_SCORE: 0.35,
   // Score mínimo para considerar a resposta confiável (média dos top resultados)
   MIN_CONFIDENCE_SCORE: 0.25,
   // Número mínimo de documentos relevantes para responder

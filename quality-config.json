@@ -1,0 +1,30 @@
+{
+  "targetScore": 9.5,
+  "evaluationIntervalHours": 12,
+  "minTracesForEval": 20,
+  "thresholds": {
+    "retrievalPrecision": 0.85,
+    "citationRate": 0.9,
+    "hallucinationRate": 0.05,
+    "coverageRate": 0.8,
+    "avgQualityScore": 85,
+    "faqFreshnessDays": 90,
+    "conversaHumana": 0.9
+  },
+  "autoFix": {
+    "enabled": true,
+    "expandFAQ": true,
+    "enhanceRAG": true,
+    "optimizePrompt": true,
+    "fillGaps": true
+  },
+  "weights": {
+    "retrievalPrecision": 0.2,
+    "citationRate": 0.2,
+    "hallucinationRate": 0.15,
+    "coverageRate": 0.15,
+    "avgQualityScore": 0.2,
+    "faqFreshness": 0,
+    "conversaHumana": 0.1
+  }
+}

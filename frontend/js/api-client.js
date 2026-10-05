@@ -383,6 +383,16 @@ const chatAPI = {
     return apiClient.get(`/sugestoes?q=${quantidade}`);
   },
 
+  /**
+   * Saudação de abertura de sessão (GET /api/chat/welcome).
+   * O backend monta a saudação conforme o horário real e personaliza
+   * com o nome do usuário autenticado (Entra ID).
+   * @returns {Promise<{mensagem:string, saudacao:string, periodo:string, comNome:boolean}>}
+   */
+  async getWelcome() {
+    return apiClient.get('/chat/welcome');
+  },
+
   async getFAQ() {
     return apiClient.get('/faq');
   },

@@ -19,7 +19,7 @@ const crypto = require('crypto');
 const EMBEDDING_CONFIG = {
   gemini: {
     name: 'Google Gemini Embeddings',
-    model: 'text-embedding-004',
+    model: 'gemini-embedding-001',
     dimensions: 768,
     apiKeyEnv: 'GEMINI_API_KEY',
     endpoint: 'https://generativelanguage.googleapis.com/v1beta/models'
@@ -85,18 +85,47 @@ class EmbeddingProvider {
   }
 
   /**
+   * Gera embedding otimizado para consulta.
+   * Provedores de retrieval distinguem vetores de documentos e de perguntas.
+   */
+  async embedQuery(text) {
+    if (!text || text.trim().length === 0) {
+      return new Array(this.dimensions).fill(0);
+    }
+
+    try {
+      if (this.provider === 'gemini') {
+        return await this._embedGemini(text, 'RETRIEVAL_QUERY');
+      }
+      if (this.provider === 'openai') {
+        return await this._embedOpenAI(text);
+      }
+      return this._embedLocal(text);
+    } catch (error) {
+      console.warn(`[Embeddings] Erro no embedding de consulta ${this.provider}, usando local:`, error.message);
+      return this._embedLocal(text);
+    }
+  }
+
+  /**
    * Gera embeddings para múltiplos textos (batch)
+   * Usa lotes pequenos com pausa para respeitar o rate limit das APIs de embedding.
    * @param {string[]} texts
    * @returns {Promise<number[][]>}
    */
   async embedBatch(texts) {
-    const BATCH_SIZE = 10;
+    const BATCH_SIZE = 5;
+    const BATCH_DELAY_MS = 1500;
     const results = [];
 
     for (let i = 0; i < texts.length; i += BATCH_SIZE) {
       const batch = texts.slice(i, i + BATCH_SIZE);
       const batchResults = await Promise.all(batch.map((t) => this.embed(t)));
       results.push(...batchResults);
+
+      if (i + BATCH_SIZE < texts.length) {
+        await new Promise((r) => setTimeout(r, BATCH_DELAY_MS));
+      }
     }
 
     return results;
@@ -107,27 +136,39 @@ class EmbeddingProvider {
   /**
    * Embedding via Google Gemini API
    */
-  async _embedGemini(text) {
+  async _embedGemini(text, taskType = 'RETRIEVAL_DOCUMENT') {
     const config = EMBEDDING_CONFIG.gemini;
     const endpoint = `${config.endpoint}/${config.model}:embedContent?key=${process.env[config.apiKeyEnv]}`;
 
     const body = {
       content: { parts: [{ text }] },
-      taskType: 'RETRIEVAL_DOCUMENT'
+      taskType,
+      outputDimensionality: config.dimensions
     };
 
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
+    const MAX_TENTATIVAS = 5;
+    for (let tentativa = 1; tentativa <= MAX_TENTATIVAS; tentativa++) {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
 
-    if (!response.ok) {
+      if (response.ok) {
+        const data = await response.json();
+        return data.embedding?.values || [];
+      }
+
+      // Rate limit (429) ou erro temporário (5xx): aguarda com backoff e tenta novamente
+      if ((response.status === 429 || response.status >= 500) && tentativa < MAX_TENTATIVAS) {
+        const espera = 2000 * Math.pow(2, tentativa - 1) + Math.floor(Math.random() * 500);
+        console.warn(`[Embeddings] Gemini HTTP ${response.status} — aguardando ${(espera / 1000).toFixed(1)}s (tentativa ${tentativa}/${MAX_TENTATIVAS})`);
+        await new Promise((r) => setTimeout(r, espera));
+        continue;
+      }
+
       throw new Error(`Gemini embedding error: HTTP ${response.status}`);
     }
-
-    const data = await response.json();
-    return data.embedding?.values || [];
   }
 
   /**

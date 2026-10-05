@@ -507,6 +507,9 @@ try {
           audioBase64: audio.audioBase64,
           fallback: audio.fallback
         };
+        
+        // Para streaming SSE, também envia o audio no evento 'done' via metadata
+        // (o frontend streaming usa chamada separada /api/tts)
       } catch (ttsError) {
         console.warn(`[Chat] TTS falhou: ${ttsError.message}`);
         responseData.audio = { fallback: true, error: ttsError.message };
@@ -568,6 +571,39 @@ app.post('/api/chat/stream', async (req, res) => {
 
   // Processa com streaming
   await processarPerguntaStream(pergunta, res, resultadosFAQ, user);
+});
+
+// ============ BOAS-VINDAS (saudação proativa por horário + nome) ============
+
+/**
+ * GET /api/chat/welcome
+ *
+ * Saudação de abertura de sessão, coerente com o horário real e
+ * personalizada com o nome do usuário autenticado (Entra ID).
+ * Chamado pelo frontend ao abrir a conversa.
+ */
+app.get('/api/chat/welcome', (req, res) => {
+  try {
+    const { gerarBoasVindas } = require('./agents/welcome-agent');
+
+    // Nome vem do middleware de autenticação/personalização do Entra ID.
+    const nomeUsuario = req.user?.displayName
+      || res.locals.userInfo?.nome
+      || null;
+
+    const boasVindas = gerarBoasVindas({ nomeUsuario });
+
+    res.json({
+      mensagem: boasVindas.mensagem,
+      saudacao: boasVindas.saudacao,
+      periodo: boasVindas.periodo,
+      comNome: boasVindas.comNome,
+      autenticado: Boolean(req.user?.authenticated)
+    });
+  } catch (error) {
+    console.error('[Welcome] Erro ao gerar boas-vindas:', error.message);
+    res.status(500).json({ erro: 'Não foi possível gerar a saudação inicial.' });
+  }
 });
 
 // ============ ROTAS DOS AGENTES ESPECIALISTAS (PÚBLICO) ============
@@ -936,6 +972,36 @@ app.get('/api/knowledge-gaps', (req, res) => {
       dataRegistro: p.dataRegistro
     }))
   });
+});
+
+// ============ QUALITY IMPROVEMENT AGENT (PÚBLICO) ============
+
+app.get('/api/quality/dashboard', async (req, res) => {
+  try {
+    const dashboard = await orchestrator.qualityAgent.getDashboard();
+    res.json(dashboard);
+  } catch (error) {
+    res.status(500).json({ erro: error.message });
+  }
+});
+
+app.post('/api/quality/evaluate', roleGuard(['admin', 'gerente']), async (req, res) => {
+  try {
+    const result = await orchestrator.qualityAgent.runEvaluation();
+    res.json({ sucesso: true, ...result });
+  } catch (error) {
+    res.status(500).json({ erro: error.message });
+  }
+});
+
+app.post('/api/quality/config', roleGuard(['admin']), async (req, res) => {
+  try {
+    const agent = require('./agents/quality-improvement-agent').getQualityImprovementAgent();
+    const newConfig = agent.updateConfig(req.body);
+    res.json({ sucesso: true, config: newConfig });
+  } catch (error) {
+    res.status(500).json({ erro: error.message });
+  }
 });
 
 // ============ ROTAS DOS GUARDIÕES (PÚBLICO) ============

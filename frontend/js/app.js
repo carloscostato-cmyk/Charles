@@ -90,6 +90,7 @@ const elements = {
   // Tela de voz
   voiceScreen: document.getElementById('voiceScreen'),
   robotIcon: document.getElementById('robotIcon'),
+  robotStatus: document.getElementById('robotStatus'),
   soundWaves: document.getElementById('soundWaves'),
   voiceHint: document.getElementById('voiceHint'),
   voiceMicBtn: document.getElementById('voiceMicBtn'),
@@ -200,9 +201,11 @@ function processarViseme(texto) {
 function setEstadoFalando(falando) {
   if (falando) {
     elements.soundWaves.classList.add('active');
+    setEstadoRobo('speaking');
     elements.voiceHint.textContent = '🔊 Respondendo...';
   } else {
     elements.soundWaves.classList.remove('active');
+    setEstadoRobo(null);
     // Remove todos os visemes ativos
     const visemes = document.querySelectorAll('.mouth-viseme.active');
     visemes.forEach(v => v.classList.remove('active'));
@@ -213,6 +216,50 @@ function setEstadoFalando(falando) {
 // ============ TELA DE VOZ ==========
 
 /**
+ * Estados visuais do robô (v4.2).
+ *
+ * Antes o robô só comunicava "listening". Agora ele informa o que está
+ * fazendo: ouvindo, pensando, falando ou com erro.
+ *
+ * Centralizar aqui evita o bug de cada função mexer só em parte dos estados.
+ * @param {string|null} estado - 'listening' | 'thinking' | 'speaking' | 'error' | null
+ * @param {string} [rotulo] - texto exibido no indicador (padrão por estado)
+ */
+const ROTULOS_ROBO = {
+  listening: 'Ouvindo',
+  thinking: 'Pensando',
+  speaking: 'Respondendo',
+  error: 'Ops, algo falhou'
+};
+
+const ESTADOS_ROBO = ['listening', 'thinking', 'speaking', 'error'];
+
+function setEstadoRobo(estado, rotulo) {
+  const { robotIcon, robotStatus } = elements;
+  if (!robotIcon) return;
+
+  // Limpa todos os estados antes de aplicar o novo (evita estado residual).
+  ESTADOS_ROBO.forEach((e) => robotIcon.classList.remove(e));
+
+  if (!estado) {
+    if (robotStatus) {
+      robotStatus.classList.remove('visible');
+      robotStatus.removeAttribute('data-state');
+      robotStatus.textContent = '';
+    }
+    return;
+  }
+
+  robotIcon.classList.add(estado);
+
+  if (robotStatus) {
+    robotStatus.classList.add('visible');
+    robotStatus.setAttribute('data-state', estado);
+    robotStatus.textContent = rotulo || ROTULOS_ROBO[estado] || '';
+  }
+}
+
+/**
  * Estado de escuta: ativa/desativa ondas sonoras e animações
  */
 function setEstadoEscuta(escutando) {
@@ -221,8 +268,9 @@ function setEstadoEscuta(escutando) {
   elements.robotIcon.classList.toggle('listening', escutando);
   elements.voiceMicBtn.classList.toggle('listening', escutando);
   elements.voiceHint.classList.toggle('listening', escutando);
-  elements.voiceHint.textContent = escutando 
-    ? '🎤 Ouvindo... fale sua pergunta' 
+  setEstadoRobo(escutando ? 'listening' : null);
+  elements.voiceHint.textContent = escutando
+    ? '🎤 Ouvindo... fale sua pergunta'
     : 'Fale no microfone ou clique em Digitar';
 }
 
@@ -236,9 +284,25 @@ function setEstadoProcessando(processando) {
     elements.voiceHint.classList.remove('listening');
     elements.robotIcon.classList.remove('listening');
     elements.soundWaves.classList.remove('active');
+    setEstadoRobo('thinking');
   } else {
+    setEstadoRobo(null);
     elements.voiceHint.textContent = 'Fale no microfone ou clique em Digitar';
   }
+}
+
+/**
+ * Sinaliza erro na interface (usado quando uma requisição falha).
+ * Chama atenção sem "punir" a pessoa com uma tela vermelha.
+ */
+function setEstadoErro(mensagem) {
+  setEstadoRobo('error', mensagem || ROTULOS_ROBO.error);
+  setTimeout(() => {
+    // Só limpa se ainda estiver no estado de erro (evita race com novo estado).
+    if (elements.robotIcon?.classList.contains('error')) {
+      setEstadoRobo(null);
+    }
+  }, 3000);
 }
 
 /**
@@ -348,20 +412,16 @@ async function processarPerguntaVoz(texto) {
       scrollParaFinal();
     }
     
-    // FALA A RESPOSTA VIA TTS
-    if (voiceSupport.speechSynthesis && resposta.resposta && resposta.resposta.trim()) {
-      // Timeout de segurança
-      window.__charlesTimeout = setTimeout(() => {
-        console.log('[Voice] Timeout TTS - reset');
-      }, 10000);
-      
-      console.log('[Voice] Chamando TTS para:', resposta.resposta.substring(0, 50));
-      voiceSynthesis.falar(resposta.resposta);
+    // FALA A RESPOSTA VIA TTS COM APRESENTAÇÃO
+    if (resposta.resposta && resposta.resposta.trim()) {
+      console.log('[Voice] Falando resposta para:', resposta.resposta.substring(0, 50));
+      falarRespostaComApresentacao(resposta.resposta);
     }
     
   } catch (error) {
     console.error('[Charles] Erro:', error);
     setEstadoProcessando(false);
+    setEstadoErro('Ops, algo falhou');
     elements.voiceHint.textContent = '⚠️ Erro';
     setTimeout(() => {
       elements.voiceHint.textContent = 'Fale no microfone ou clique em Digitar';
@@ -416,78 +476,130 @@ function voltarParaVoz() {
 // ============ SÍNTESE DE VOZ ============
 
 /**
- * Fala um texto com callbacks de estado visual, usando o VoiceClient seguro
+ * Fala a resposta incluindo a apresentação de abertura na primeira interação
+ */
+function falarRespostaComApresentacao(textoResposta) {
+  if (!textoResposta || !textoResposta.trim()) return;
+  if (state.modoTexto) return;
+
+  let textoFinal = textoResposta;
+
+  if (!state.jaApresentou) {
+    state.jaApresentou = true;
+    const saudacao = "Olá! Eu sou o Charles, assistente virtual do Departamento de Data Center da Claro Empresas. ";
+    if (!textoResposta.toLowerCase().includes('sou o charles') && !textoResposta.toLowerCase().includes('olá! eu sou o charles')) {
+      textoFinal = saudacao + textoResposta;
+    }
+  }
+
+  falarRespostaAutomatica(textoFinal);
+}
+
+/**
+ * Fala a saudação de abertura do robô Charles
+ */
+function falarSaudacaoAbertura() {
+  state.jaApresentou = true;
+  const abertura = "Olá! Eu sou o Charles, assistente virtual do Departamento de Data Center da Claro Empresas. Fale no microfone ou clique em Digitar para tirar qualquer dúvida!";
+  falarRespostaAutomatica(abertura);
+}
+
+/**
+ * Fala um texto com callbacks de estado visual e suporte a cancelamento
  */
 function falarRespostaAutomatica(texto) {
-  if (!voiceSupport.speechSynthesis || !texto || !texto.trim()) return;
-  
-  const client = state.voiceClient;
-  
-  // Se temos VoiceClient com suporte a TTS, usa ele
-  if (client && typeof client.playTTS === 'function') {
-    // Timeout de segurança
-    setTimeout(() => {
-      try {
-        client.playTTS(texto).catch(() => {});
-      } catch(e) {}
-    }, 100);
-    return;
+  if (!texto || !texto.trim()) return;
+  if (state.modoTexto) return;
+
+  // Desbloqueia e cancela fala anterior
+  if (window.speechSynthesis) {
+    try { window.speechSynthesis.cancel(); } catch(e) {}
   }
-  
-  // Caso contrário, usa Web Speech API diretamente
-  if (speechSynthesis) {
-    try { speechSynthesis.cancel(); } catch(e) {}
+
+  // Executa síntese com fallback garantido
+  if (typeof voiceSynthesis !== 'undefined' && voiceSynthesis.falar) {
+    voiceSynthesis.falar(texto);
   }
-  
-  voiceSynthesis.falar(texto);
 }
 
 function pararFala() {
+  if (typeof voiceSynthesis !== 'undefined' && voiceSynthesis.parar) {
+    voiceSynthesis.parar();
+  }
+
   const client = state.voiceClient;
-
   if (client && typeof client.handleUserStop === 'function') {
-    client.handleUserStop().then(atualizarEstadoFala).catch(atualizarEstadoFala);
-    return;
+    client.handleUserStop().catch(() => {});
   }
 
-  if (!voiceSynthesis.estaFalando()) {
-    atualizarEstadoFala(false);
-    return;
-  }
-
-  voiceSynthesis.parar();
   atualizarEstadoFala(false);
 }
 
 function atualizarEstadoFala(falando) {
-  elements.somBtn.classList.toggle('active', falando);
-  elements.somBtn.title = falando ? 'Parar leitura' : 'Ler resposta';
+  if (elements.somBtn) {
+    elements.somBtn.classList.toggle('active', falando);
+    elements.somBtn.title = falando ? 'Parar leitura' : 'Ler resposta';
+  }
 
   if (elements.stopSpeechBtn) {
     elements.stopSpeechBtn.disabled = !falando;
     elements.stopSpeechBtn.classList.toggle('active', falando);
   }
 
-  if (elements.chatContainer.style.display === 'none') {
-    setEstadoFalando(falando);
-  }
+  setEstadoFalando(falando);
 }
 
 // ============ RENDERIZAÇÃO DO CHAT ============
 
+/**
+ * Renderiza a tela inicial do chat.
+ *
+ * A saudação vem do backend (GET /api/chat/welcome), que monta "Bom dia" /
+ * "Boa tarde" / "Boa noite" conforme o horário real e personaliza com o
+ * nome do usuário autenticado via Entra ID.
+ *
+ * Se a chamada falhar, mantém o texto estático — a tela nunca fica vazia.
+ */
 function renderTelaInicialChat() {
   elements.messages.innerHTML = '';
-  
+
   const welcomeDiv = document.createElement('div');
   welcomeDiv.className = 'welcome-message';
   welcomeDiv.innerHTML = `
     <div class="welcome-avatar"><img src="assets/charles-removebg-preview.png" alt="Charles"></div>
-    <h2>Olá! Eu sou o Charles</h2>
-    <p>Seu assistente virtual do Departamento de Data Center da Claro Empresas. Pergunte sobre processos, normas e procedimentos!</p>
+    <h2 id="welcomeTitulo">Olá! Eu sou o Charles</h2>
+    <p id="welcomeTexto">Seu assistente virtual do Departamento de Data Center da Claro Empresas. Pergunte sobre processos, normas e procedimentos!</p>
   `;
   elements.messages.appendChild(welcomeDiv);
-  
+
   carregarSugestoes();
+  carregarSaudacaoPersonalizada();
+}
+
+/**
+ * Busca a saudação contextualizada no backend e aplica na tela.
+ * Falha silenciosa: mantém o texto estático já renderizado.
+ */
+async function carregarSaudacaoPersonalizada() {
+  try {
+    const dados = await chatAPI.getWelcome();
+    if (!dados || !dados.mensagem) return;
+
+    const titulo = document.getElementById('welcomeTitulo');
+    const texto = document.getElementById('welcomeTexto');
+
+    // Nome quando disponível; senão, só a saudação por período.
+    if (titulo) {
+      titulo.textContent = dados.comNome
+        ? `Olá, eu sou o Charles!`
+        : `Olá! Eu sou o Charles`;
+    }
+    if (texto) {
+      texto.textContent = dados.mensagem.replace(/^.*?!\s*/, '');
+    }
+  } catch (error) {
+    console.warn('[Charles] Não foi possível carregar a saudação:', error.message);
+  }
 }
 
 function renderMensagem(tipo, conteudo, fonte = null, thumbnailUrl = null, downloadUrl = null, metadata = null) {
@@ -672,14 +784,6 @@ async function enviarMensagemChat() {
   renderMensagem('user', texto);
   state.mensagens.push({ tipo: 'user', texto });
   
-  // Fala mensagem de fallback aleatória do estilo atual para feedback (SEMPRE)
-  const fallbackMessage = getFallbackMessage();
-  console.log(`[Charles] Fallback: "${fallbackMessage}"`);
-  if (voiceSupport.speechSynthesis) {
-    voiceSynthesis.parar();
-    voiceSynthesis.falar(fallbackMessage);
-  }
-  
   state.processando = true;
   renderTyping();
   
@@ -721,8 +825,8 @@ async function enviarMensagemChat() {
           fonte: metadata.fonte 
         });
         
-        // Fala a resposta automaticamente
-        falarRespostaAutomatica(streamedText);
+        // Fala a resposta automaticamente com apresentação se for a primeira vez
+        falarRespostaComApresentacao(streamedText);
         
         // Carrega sugestões
         if (metadata.fonte) {
@@ -748,8 +852,8 @@ async function enviarMensagemChat() {
         fonte: resposta.fonte 
       });
       
-      // Fala a resposta automaticamente
-      falarRespostaAutomatica(resposta.resposta);
+      // Fala a resposta automaticamente com apresentação se for a primeira vez
+      falarRespostaComApresentacao(resposta.resposta);
       
       if (resposta.sugestoes && resposta.sugestoes.length > 0) {
         const suggestionsDiv = document.createElement('div');
@@ -948,14 +1052,45 @@ function toggleMicrofone() {
 // ============ EVENTOS ============
 
 function configurarEventos() {
+  // Desbloqueio preventivo de áudio na primeira interação do usuário (clique ou tecla)
+  function desbloquearAudio() {
+    if (window.voiceSynthesis && typeof window.voiceSynthesis.destravarAudio === 'function') {
+      window.voiceSynthesis.destravarAudio();
+    }
+  }
+  
+  document.addEventListener('click', desbloquearAudio, { once: true });
+  document.addEventListener('keydown', desbloquearAudio, { once: true });
+
   // TELA DE VOZ
-  elements.voiceMicBtn.addEventListener('click', iniciarCapturaVozTelaInicial);
+  if (elements.robotIcon) {
+    elements.robotIcon.style.cursor = 'pointer';
+    elements.robotIcon.title = 'Clique para ouvir a apresentação do Charles';
+    elements.robotIcon.addEventListener('click', () => {
+      if (window.voiceSynthesis) window.voiceSynthesis.destravarAudio();
+      falarSaudacaoAbertura();
+    });
+  }
+
+  elements.voiceMicBtn.addEventListener('click', () => {
+    if (window.voiceSynthesis) window.voiceSynthesis.destravarAudio();
+    iniciarCapturaVozTelaInicial();
+  });
   elements.voiceTextBtn.addEventListener('click', () => abrirChatParaDigitacao(true));
   
   // CHAT
-  elements.sendBtn.addEventListener('click', enviarMensagemChat);
-  elements.microfoneBtn.addEventListener('click', toggleMicrofone);
-  elements.somBtn.addEventListener('click', alternarSom);
+  elements.sendBtn.addEventListener('click', () => {
+    if (window.voiceSynthesis) window.voiceSynthesis.destravarAudio();
+    enviarMensagemChat();
+  });
+  elements.microfoneBtn.addEventListener('click', () => {
+    if (window.voiceSynthesis) window.voiceSynthesis.destravarAudio();
+    toggleMicrofone();
+  });
+  elements.somBtn.addEventListener('click', () => {
+    if (window.voiceSynthesis) window.voiceSynthesis.destravarAudio();
+    alternarSom();
+  });
   if (elements.stopSpeechBtn) {
     elements.stopSpeechBtn.addEventListener('click', pararFala);
   }
@@ -964,8 +1099,23 @@ function configurarEventos() {
   elements.input.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
+      if (window.voiceSynthesis) window.voiceSynthesis.destravarAudio();
       enviarMensagemChat();
     }
+  });
+
+  // Eventos globais de TTS
+  window.addEventListener('tts:start', (e) => {
+    atualizarEstadoFala(true);
+  });
+  window.addEventListener('tts:end', () => {
+    atualizarEstadoFala(false);
+  });
+  window.addEventListener('tts:stop', () => {
+    atualizarEstadoFala(false);
+  });
+  window.addEventListener('tts:error', () => {
+    atualizarEstadoFala(false);
   });
 }
 
@@ -973,20 +1123,31 @@ function configurarEventos() {
 
 async function inicializar() {
   console.log('=================================');
-  console.log('  Chatbot Charles v4.2');
+  console.log('  Chatbot Charles v4.3');
   console.log('  State of the Art 2026');
   console.log('  RAG + Tools + Router + Memory + SSE');
-  console.log('  Streaming: Token-by-token (SSE)');
-  console.log('  Voice Gate: Anti-interrupção');
+  console.log('  Dual Voice Engine: Neural TTS + Web Speech');
   console.log('  Lip-sync: Viseme-based mouth animation');
   console.log('=================================');
 
-  configurarEventos();
-  await verificarStatus();
+  if (window.LipSync) {
+    try {
+      window.lipSync = new window.LipSync();
+    } catch (e) {
+      console.warn('[LipSync] Erro ao inicializar:', e);
+    }
+  }
 
   if (window.VoiceClient) {
-    state.voiceClient = new VoiceClient();
+    try {
+      state.voiceClient = new window.VoiceClient();
+    } catch (e) {
+      console.warn('[VoiceClient] Erro ao inicializar:', e);
+    }
   }
+
+  configurarEventos();
+  await verificarStatus();
 
   elements.chatContainer.style.display = 'none';
   elements.voiceScreen.classList.remove('hidden');

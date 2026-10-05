@@ -32,21 +32,32 @@ class DataCenterLoader {
       const worksheet = workbook.Sheets[sheetName];
       const data = XLSX.utils.sheet_to_json(worksheet);
 
-      this.datacenters = data.map((row, index) => ({
-        id: index + 1,
-        titulo: row.Título || row.titulo || '',
-        endereco: row.Endereço || row.endereco || '',
-        numero: row.Número || row.numero || '',
-        complemento: row.Complemento || row.complemento || '',
-        bairro: row.Bairro || row.bairro || '',
-        cep: row.CEP || row.cep || '',
-        cidade: row.Cidade || row.cidade || '',
-        uf: row.UF || row.uf || '',
-        telefone: row.Telefone || row.telefone || '',
-        // Campo consolidado para busca
-        localizacao: `${row.Cidade || ''}, ${row.UF || ''}`,
-        enderecoCompleto: `${row.Endereço || ''}, ${row.Número || ''} ${row.Complemento || ''} ${row.Bairro || ''} ${row.CEP || ''} ${row.Cidade || ''} ${row.UF || ''}`
-      }));
+      this.datacenters = data.map((row, index) => {
+        const titulo = (row['Título'] || row['Titulo'] || row.titulo || '').trim();
+        const endereco = (row['Endereço '] || row['Endereço'] || row['Endereco '] || row['Endereco'] || row.endereco || '').trim();
+        const numero = String(row['Numero'] || row['Número'] || row.numero || '').trim();
+        const complemento = (row['Complemento'] || row.complemento || '').trim();
+        const bairro = (row['Bairro'] || row.bairro || '').trim();
+        const cep = (row['CEP'] || row.cep || '').trim();
+        const cidade = (row['Cidade'] || row.cidade || '').trim();
+        const uf = (row['UF'] || row.uf || '').trim();
+        const telefone = (row['Telefone'] || row.telefone || '').trim();
+
+        return {
+          id: index + 1,
+          titulo,
+          endereco,
+          numero,
+          complemento,
+          bairro,
+          cep,
+          cidade,
+          uf,
+          telefone,
+          localizacao: `${cidade}, ${uf}`,
+          enderecoCompleto: `${endereco}${numero ? ', nº ' + numero : ''}${complemento ? ' (' + complemento + ')' : ''}, ${bairro} - CEP: ${cep} - ${cidade}/${uf}`
+        };
+      });
 
       this.loaded = true;
       console.log(`[DataCenterLoader] ✅ ${this.datacenters.length} Data Centers carregados`);

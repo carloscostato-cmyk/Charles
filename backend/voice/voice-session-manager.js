@@ -239,6 +239,16 @@ class VoiceSessionManager {
   }
 
   /**
+   * Atualiza a predição de barge-in com base no tempo de resposta e padrões
+   * @param {Object} options
+   */
+  atualizarPredicaoBargeIn(options = {}) {
+    const tempo = options.tempoResposta || 3000;
+    this.bargeInPrediction.averageResponseTime = (this.bargeInPrediction.averageResponseTime + tempo) / 2;
+    this.bargeInPrediction.lastUserPause = Date.now();
+  }
+
+  /**
    * Obtem o perfil emocional atual
    * @returns {Object}
    */

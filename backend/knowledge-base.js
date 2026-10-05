@@ -79,6 +79,13 @@ class KnowledgeBase {
   }
 
   /**
+   * Alias de compatibilidade
+   */
+  getContext(pergunta) {
+    return this.getContextoOtimizado(pergunta);
+  }
+
+  /**
    * Retorna contexto resumido (para prompts grandes)
    */
   getContextoResumido() {
@@ -122,6 +129,33 @@ class KnowledgeBase {
       dc.endereco.toLowerCase().includes(termoLower) ||
       dc.telefone.includes(termoLower)
     );
+  }
+
+  /**
+   * Busca unificada na base de conhecimento (FAQ + Data Centers)
+   * @param {string} termo
+   * @param {number} limite
+   * @returns {Array}
+   */
+  search(termo, limite = 5) {
+    const faq = this.buscarNoFAQ(termo).map(f => ({
+      tipo: 'faq',
+      pergunta: f.pergunta,
+      resposta: f.resposta,
+      texto: `P: ${f.pergunta}\nR: ${f.resposta}`
+    }));
+
+    const dcs = this.buscarNosDataCenters(termo).map(dc => ({
+      tipo: 'datacenter',
+      titulo: dc.titulo,
+      cidade: dc.cidade,
+      uf: dc.uf,
+      endereco: dc.endereco,
+      telefone: dc.telefone,
+      texto: `${dc.titulo} - ${dc.cidade}, ${dc.uf} (${dc.endereco}) | Tel: ${dc.telefone}`
+    }));
+
+    return [...faq, ...dcs].slice(0, limite);
   }
 
   /**

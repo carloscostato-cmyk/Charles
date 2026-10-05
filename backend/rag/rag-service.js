@@ -104,11 +104,21 @@ class RAGService {
 
   // ============ RETRIEVAL ============
 
+  async search(query, topK = 8) {
+    return await this.retrieveContextForPrompt(query, topK);
+  }
+
   async retrieve(query, topK = 8, filter = {}) {
     await this.initialize();
 
-    const queryEmbedding = await this.embeddingProvider.embed(query);
-    const results = await this.vectorStore.similaritySearch(queryEmbedding, topK, filter);
+    const queryEmbedding = this.embeddingProvider.embedQuery
+      ? await this.embeddingProvider.embedQuery(query)
+      : await this.embeddingProvider.embed(query);
+    // Recupera uma janela maior para permitir reranking híbrido. O embedding
+    // local é lexical por natureza; combinar os dois sinais evita que colisões
+    // do hash elevem documentos apenas tangencialmente relacionados.
+    const candidates = await this.vectorStore.similaritySearch(queryEmbedding, Math.max(topK * 3, 12), filter);
+    const results = this._rerankHybrid(query, candidates).slice(0, topK);
 
     // Validação RAG: filtra documentos com baixa relevância e verifica confiança
     const validation = this.validator.validate(query, results);
@@ -122,6 +132,37 @@ class RAGService {
       results: validation.filteredResults,
       validation
     };
+  }
+
+  _rerankHybrid(query, candidates) {
+    const queryTerms = this._extractTerms(query);
+    if (queryTerms.length === 0) return candidates;
+
+    return candidates
+      .map((result) => {
+        const contentTerms = new Set(this._extractTerms(result.content));
+        const overlap = queryTerms.filter((term) => contentTerms.has(term)).length / queryTerms.length;
+        const score = (result.score * 0.7) + (overlap * 0.3);
+        return { ...result, score };
+      })
+      .sort((a, b) => b.score - a.score);
+  }
+
+  _extractTerms(text) {
+    const stopwords = new Set([
+      'a', 'as', 'o', 'os', 'um', 'uma', 'uns', 'umas', 'e', 'ou', 'de',
+      'da', 'das', 'do', 'dos', 'em', 'no', 'na', 'nos', 'nas', 'para',
+      'por', 'com', 'sem', 'que', 'qual', 'quais', 'como', 'onde', 'quando',
+      'quem', 'porque', 'não', 'nao', 'é', 'ser', 'tem', 'ter'
+    ]);
+
+    return [...new Set(String(text || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^\w\s]/g, ' ')
+      .split(/\s+/)
+      .filter((term) => term.length > 2 && !stopwords.has(term)))];
   }
 
   async retrieveContextForPrompt(query, topK = 8) {
