@@ -102,10 +102,14 @@ jobs:
         run: |
           docker run -d --name charles-test -p 3000:3000 charles-ai-v4:${GITHUB_SHA::7}
           sleep 10
-          docker ps | grep charles-test
-          # Verifica se container está saudável
-          docker inspect --format='{{.State.Health.Status}}' charles-test
-          docker logs charles-test | tail -30
+          echo "--- docker ps -a ---"
+          docker ps -a | grep charles-test || true
+          echo "--- logs do container (últimas 60 linhas) ---"
+          docker logs charles-test 2>&1 | tail -60 || true
+          echo "--- estado ---"
+          docker inspect --format='running={{.State.Running}} exitcode={{.State.ExitCode}} health={{.State.Health.Status}}' charles-test
+          # O container precisa estar de pé (o healthcheck do Dockerfile cuida do resto)
+          test "$(docker inspect --format='{{.State.Running}}' charles-test)" = "true"
           docker stop charles-test
           docker rm charles-test
 
