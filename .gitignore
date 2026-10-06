@@ -43,6 +43,9 @@ ecc-temp/
 Data Center SD – Home.html
 Data Center SD – Home_files/
 
+# Pacote estático gerado para GitHub Pages (Fase 2 do Famps)
+pages-site/
+
 # Test/agent run artifacts
 jest-run.txt
 jest-baseline.txt

@@ -285,6 +285,72 @@ curl http://localhost:3000/api/providers
 
 ---
 
+## 🌐 Fase 2 — Pacote estático para GitHub Pages (Route A+)
+
+Demo 100% client-side da página "Data Center SD" com o Charles. Sem backend:
+as **159 FAQs** de `FQ_DATA_CENTER.xls` são embutidas no cliente e a camada
+`frontend/js/pages-mock.js` intercepta `fetch('/api/...')` respondendo locally.
+
+### Gerar o pacote
+
+```bash
+node scripts/build-pages-site.js                # gera ./pages-site (gitignored)
+node scripts/build-pages-site.js --out /tmp/x   # destino alternativo
+node scripts/build-pages-site.js --quiet        # sem resumo
+```
+
+### Preview local (simula a project page em /Charles/)
+
+```bash
+node scripts/serve-pages.js                     # http://localhost:4173/Charles/
+node scripts/serve-pages.js --port 8080 --base /Charles
+```
+
+O prefixo `/Charles/` importa: é assim que o GitHub Pages serve
+`https://<usuario>.github.io/Charles/` — os caminhos do pacote são relativos
+(`./css/...`) e funcionam sob qualquer prefixo.
+
+### Estrutura gerada
+
+| Arquivo no pacote | Origem |
+|---|---|
+| `index.html` | `index-datacenter.html` com paths relativos + mock injetado |
+| `css/` | `frontend/css/` (style, response-types, a11y) |
+| `js/` | `frontend/js/` (api-client, app, voice, lip-sync) + `pages-mock.js` |
+| `assets/` | merge de `assets/` + `frontend/assets/` |
+| `data/faqs.js` | **159 FAQs embutidas** (`window.CHARLES_FAQS`) |
+| `data/faqs.json` | mesma base em JSON canônico (download/inspeção) |
+| `.nojekyll` | impede o Jekyll de filtrar arquivos |
+
+### Contratos e garantias
+
+- **Endpointos cobertos pelo mock:** `GET /api/status`, `GET /api/faq`,
+  `GET /api/sugestoes`, `GET /api/chat/welcome`, `POST /api/chat/stream`
+  (SSE `metadata → token* → done`), `POST /api/chat`, `POST /api/chat/reset`.
+  Demais `/api/*` → 404 JSON (ex.: `/api/tts`, onde o `voice.js` já cai no
+  fallback Web Speech).
+- **Busca local** é um porte de `backend/faq-search.js` (mesmos pesos e
+  threshold 0.2) — o demo responde igual ao ambiente completo.
+- **Trava dupla:** o mock só entra no HTML pelo build **e** só ativa com a
+  flag `window.__CHARLES_PAGES__` (também injetada pelo build). O Express
+  (`/sharepoint`) não injeta nada — comportamento do backend inalterado.
+- O HTML original `index-datacenter.html` **não é modificado** pelo build.
+
+### Testes
+
+```bash
+npx jest --config jest.config.js pages-mock    # núcleo + integração do build
+```
+
+Cobertos em `backend/__tests__/pages-mock.test.js`: contrato de 159 FAQs,
+shapes dos endpoints, busca match/sem-match, SSE parseável pelo parser do
+`api-client` e a estrutura do pacote gerado.
+
+> **Fase 3 (próxima):** job de publicação no `deploy.yml` usando
+> `actions/upload-pages-artifact` + `actions/deploy-pages`, com `needs: validate`.
+
+---
+
 ## 📈 Próximos Passos (Para 10/10)
 
 1. **Kubernetes** — orquestração de containers
