@@ -346,8 +346,28 @@ Cobertos em `backend/__tests__/pages-mock.test.js`: contrato de 159 FAQs,
 shapes dos endpoints, busca match/sem-match, SSE parseável pelo parser do
 `api-client` e a estrutura do pacote gerado.
 
-> **Fase 3 (próxima):** job de publicação no `deploy.yml` usando
-> `actions/upload-pages-artifact` + `actions/deploy-pages`, com `needs: validate`.
+### Fase 3 — Publicação no GitHub Pages (concluída ✅)
+
+O job **`pages`** (🌐 Deploy GitHub Pages) no `.github/workflows/deploy.yml`:
+
+- `needs: validate` — só publica após testes + guardiões verdes, e
+  **nunca em PR** (mesmo `if` do job `deploy`);
+- `npm ci --prefix backend` + `node scripts/build-pages-site.js`
+  (o `faq-reader` precisa do pacote `xlsx`);
+- `actions/configure-pages@v6` → `actions/upload-pages-artifact@v5`
+  (`path: pages-site`, `include-hidden-files: true` para manter o
+  `.nojekyll`) → `actions/deploy-pages@v5`;
+- permissões do job: `contents: read`, `pages: write`, `id-token: write`,
+  `actions: read`; environment `github-pages` (com a URL do deploy) e
+  concurrency `github-pages` (sem cancelamento de deploy em andamento);
+- **smoke test pós-deploy:** index 200 com `__CHARLES_PAGES__`,
+  `data/faqs.js` servindo `CHARLES_FAQS` e exatamente **159 FAQs**
+  no ar (até 2 min de propagação, com retries).
+
+Publicado em: **https://carloscostato-cmyk.github.io/Charles/**
+
+> Repo com **Settings → Pages → Source = GitHub Actions**
+> (`build_type: workflow`, habilitado via API na ativação da fase).
 
 ---
 
