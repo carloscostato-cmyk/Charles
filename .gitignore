@@ -49,3 +49,8 @@ jest-baseline.txt
 agent-run*.log
 chat-historico-curto.json
 knowledge-gaps.backup-*.json
+
+# Scratch scripts de análise/auditoria (criados durante desenvolvimento e removidos)
+tmp-*.js
+tmp-*.html
+tmp-*.sh

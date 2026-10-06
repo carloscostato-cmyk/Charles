@@ -159,6 +159,11 @@ app.use('/api', personalizationMiddleware);
 app.use(express.static(path.join(__dirname, '..', 'frontend')));
 app.use('/assets', express.static(path.join(__dirname, '..', 'assets')));
 
+// Mock SharePoint Data Center SD (demonstração, sem links) — mesma origem do Charles
+app.get(['/sharepoint', '/datacenter', '/demo'], (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'index-datacenter.html'));
+});
+
 // Configuração do Multer para upload de arquivos
 const fileProcessor = getFileProcessor();
 fileProcessor.ensureUploadDir();

@@ -1,57 +1,71 @@
+# ============================================================
+# Deploy Charles - Fase 1 (corrigido)
+# - Dispara em main E master (o repo usa master; antes so
+#   escutava "main" e este workflow NUNCA rodava)
+# - guardians:check agora roda com --prefix backend (antes
+#   rodava na raiz onde package.json nao tem "scripts")
+# - actions v4 + Node 20 (alinhado ao ci-cd.yml)
+# ============================================================
+
 name: Deploy Charles v3.0
 
 on:
   push:
-    branches:
-      - main
+    branches: [main, master]
   pull_request:
-    branches:
-      - main
+    branches: [main, master]
+  workflow_dispatch:
 
 jobs:
-  test-and-deploy:
+  # ============ VALIDAÇÃO PRÉ-DEPLOY ============
+  validate:
+    name: 🧪 Validação pré-deploy
     runs-on: ubuntu-latest
-    
+    timeout-minutes: 15
+
     steps:
       - name: Checkout código
-        uses: actions/checkout@v3
-      
+        uses: actions/checkout@v4
+
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
           cache: 'npm'
-          cache-dependency-path: 'backend/package-lock.json'
-      
+          cache-dependency-path: backend/package-lock.json
+
       - name: Instalar dependências
-        run: |
-          cd backend
-          npm ci
-      
+        run: npm ci --prefix backend
+
       - name: 🧪 Rodar testes
-        run: |
-          cd backend
-          npm run test:ci
-      
+        run: npm run test:ci --prefix backend
+        env:
+          NODE_ENV: test
+
       - name: 🛡️ Verificar guardiões
-        run: |
-          npm run guardians:check
-      
-      - name: 📤 Upload cobertura
+        run: npm run guardians:check --prefix backend
+
+      - name: 📤 Upload cobertura (não bloqueante)
         uses: codecov/codecov-action@v3
+        continue-on-error: true
         with:
-          files: ./backend/coverage/coverage-final.json
+          files: ./coverage/coverage-final.json
           flags: unittests
-      
-      - name: 🐳 Build Docker
-        if: github.ref == 'refs/heads/main'
+
+  # ============ DEPLOY ============
+  # (Fase 3 do Famps: aqui sera adicionado o job de publicacao
+  #  do mock no GitHub Pages, com needs: validate)
+  deploy:
+    name: ✅ Deploy bem-sucedido
+    runs-on: ubuntu-latest
+    needs: validate
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+
+    steps:
+      - name: ✅ Confirmar deploy
         run: |
-          docker build -t charles-chatbot:v3.0 .
-          docker tag charles-chatbot:v3.0 charles-chatbot:latest
-      
-      - name: ✅ Deploy bem-sucedido
-        if: github.ref == 'refs/heads/main'
-        run: |
-          echo "✅ Charles v3.0 pronto para deploy!"
+          echo "✅ Charles pronto para deploy!"
           echo "Versão: 3.0.0"
+          echo "Branch: ${GITHUB_REF_NAME}"
+          echo "Commit: ${GITHUB_SHA::7}"
           echo "Data: $(date)"

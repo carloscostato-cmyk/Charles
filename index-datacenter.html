@@ -1,28 +1,123 @@
-<![CDATA[<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Data Center SD – Home | Charles Assistente Virtual</title>
+  <title>Home | Data Center SD</title>
 
-  <!-- ===== CSS DO CHATBOT ===== -->
-  <link rel="stylesheet" href="frontend/css/style.css">
+  <!-- ===== CSS DO CHATBOT (caminhos absolutos p/ funcionar em /sharepoint) ===== -->
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/response-types.css">
+  <link rel="stylesheet" href="/css/a11y.css">
 
   <!-- ===== CSS ESPECÍFICO DO WRAPPER (chatbot sobre Data Center) ===== -->
   <style>
-    /* Reset base para a página ficar limpa e branca */
+    /* ===== RESET BASE ===== */
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     html, body {
       width: 100%;
-      height: 100%;
-      overflow: hidden;
-      background: #ffffff;
+      min-height: 100%;
+      background: #f3f2f1;
       font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+      color: #323130;
     }
 
-    body {
-      background: #ffffff;
+    /* ===== MOCK SHAREPOINT FIEL (só cenário, sem links) ===== */
+    .sp-mock, .sp-mock * { pointer-events: none !important; }
+    .sp-mock a { cursor: default !important; text-decoration: none !important; }
+    .sp-hero-top { background: #000; color: #fff; position: relative; overflow: hidden; }
+    .sp-hero-top::before {
+      content: ""; position: absolute; inset: 0;
+      background: radial-gradient(900px 220px at 15% 20%, rgba(227,6,19,.55), transparent 60%),
+        linear-gradient(180deg, rgba(0,0,0,.55) 0%, rgba(0,0,0,.78) 100%);
+    }
+    .sp-hero-inner {
+      position: relative; max-width: 1200px; margin: 0 auto; padding: 26px 28px 18px;
+      display: grid; grid-template-columns: 1fr auto; gap: 18px; align-items: center;
+    }
+    .sp-logo-ph { display: flex; align-items: center; gap: 12px; font-weight: 800; font-size: 22px; }
+    .sp-logo-ph .claro { color: #e30613; }
+    .sp-logo-ph .empresas { font-weight: 400; color: #fff; }
+    .sp-dc-title { text-align: right; line-height: 1.1; }
+    .sp-dc-title b { display: block; font-style: italic; font-size: 28px; }
+    .sp-worldclock {
+      grid-column: 2; justify-self: end; background: #fff; color: #323130;
+      border: 1px solid #c8c6c4; font-size: 13px; padding: 6px 12px; min-width: 190px;
+    }
+    .sp-worldclock small { display: block; color: #605e5c; font-size: 11px; }
+    .sp-flow { display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap; margin: 16px 0 6px; }
+    .sp-node {
+      width: 112px; height: 112px; border-radius: 50%;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 800; color: #fff; text-align: center; line-height: 1.15;
+      box-shadow: 0 8px 22px rgba(0,0,0,.4);
+    }
+    .sp-node small { font-size: 10px; font-weight: 600; opacity: .9; margin-top: 4px; }
+    .sp-node.n1 { background: radial-gradient(circle at 30% 30%, #ffb14d, #e67e00); }
+    .sp-node.n2 { background: radial-gradient(circle at 30% 30%, #ff8a1a, #b34a00); }
+    .sp-node.log { background: radial-gradient(circle at 30% 30%, #ff6b6b, #9b0000); }
+    .sp-node.ops { background: radial-gradient(circle at 30% 30%, #4a4a4a, #000); }
+    .sp-conn { display: flex; align-items: center; gap: 6px; color: #ff8a8a; font-size: 11px; }
+    .sp-conn i { width: 42px; height: 2px; background: repeating-linear-gradient(90deg, #ff8a8a 0 6px, transparent 6px 10px); display: block; }
+    .sp-news { background: #fff; border-bottom: 1px solid #edebe9; }
+    .sp-news-inner { max-width: 1200px; margin: 0 auto; padding: 16px 28px; }
+    .sp-news-head { display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
+    .sp-carousel { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-top: 12px; }
+    .sp-news-card { border: 1px solid #edebe9; border-radius: 4px; overflow: hidden; background: #faf9f8; }
+    .sp-news-thumb {
+      height: 92px; background: linear-gradient(135deg, #e30613 0%, #7a1518 55%, #1c1c1c 100%);
+      color: #fff; font-size: 11px; font-weight: 700; display: flex; align-items: flex-end; padding: 8px;
+    }
+    .sp-news-card div.body { padding: 8px 10px; font-size: 11.5px; line-height: 1.35; }
+    .sp-news-card b { display: block; font-size: 12px; margin-bottom: 4px; }
+    .sp-quick { background: #faf9f8; border-bottom: 1px solid #edebe9; }
+    .sp-quick-inner { max-width: 1200px; margin: 0 auto; padding: 12px 28px; display: flex; gap: 10px; flex-wrap: wrap; }
+    .sp-chip { border: 1px solid #c8c6c4; background: #fff; border-radius: 999px; font-size: 12px; padding: 6px 12px; }
+    .sp-quote-red { text-align: center; color: #e30613; font-style: italic; font-weight: 700; font-size: 14px; padding: 16px 20px 4px; background: #fff; }
+    .sp-darkbox { background: #111; color: #fff; }
+    .sp-dark-inner { max-width: 1200px; margin: 0 auto; padding: 22px 28px; }
+    .sp-dark-inner h2 { font-size: 18px; margin-bottom: 10px; }
+    .sp-dark-inner p { font-size: 13.5px; line-height: 1.65; color: #e1dfdd; text-align: justify; }
+    .sp-struct { background: #1c1c1c; color: #fff; border-top: 1px solid #2d2d2d; }
+    .sp-struct-inner { max-width: 1200px; margin: 0 auto; padding: 18px 28px; }
+    .sp-struct-head { display: flex; justify-content: space-between; font-size: 13px; color: #c8c6c4; }
+    .sp-quote-white { text-align: center; font-size: 17px; font-style: italic; font-weight: 700; padding: 14px 20px 18px; color: #fff; background: #111; }
+    .sp-services { background: #000; color: #fff; }
+    .sp-services-inner { max-width: 1200px; margin: 0 auto; padding: 20px 28px; }
+    .sp-services h2 { font-size: 15px; }
+    .sp-mission { text-align: right; font-size: 15px; margin: 10px 0; }
+    .sp-mission b.red { color: #e30613; font-style: italic; }
+    .sp-mission-list { font-size: 13px; line-height: 1.7; margin-left: 18px; }
+    .sp-note { text-align: right; font-size: 11px; color: #a19f9d; margin-top: 8px; }
+    .sp-manage { background: #fff; }
+    .sp-manage-inner { max-width: 1200px; margin: 0 auto; padding: 18px 28px; }
+    .sp-manage h2 { font-size: 15px; }
+    .sp-hero-card {
+      margin-top: 10px; height: 360px; border-radius: 6px; overflow: hidden; position: relative;
+      background: linear-gradient(90deg, rgba(0,0,0,.62) 0%, rgba(0,0,0,.18) 45%, transparent 70%),
+        linear-gradient(180deg, #3d3d3d 0%, #101010 100%);
+      color: #fff; display: flex; align-items: flex-end; padding: 22px;
+    }
+    .sp-hero-card h3 { font-size: 26px; }
+    .sp-certs { background: #fff; border-top: 1px solid #edebe9; }
+    .sp-certs-inner { max-width: 1200px; margin: 0 auto; padding: 18px 28px; }
+    .sp-cert-grid { display: flex; gap: 22px; flex-wrap: wrap; margin-top: 14px; }
+    .sp-cert { width: 168px; height: 168px; border-radius: 50%; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 14px; }
+    .sp-cert b { font-size: 19px; }
+    .sp-cert span { font-size: 10.5px; margin-top: 6px; }
+    .sp-cert.tier { background: radial-gradient(circle at 30% 30%, #ff7a7a, #a8000b); }
+    .sp-cert.ceeda { background: radial-gradient(circle at 30% 30%, #b8e62e, #5a7d00); }
+    .sp-cert.iso45 { background: radial-gradient(circle at 30% 30%, #3aa0ff, #004578); }
+    .sp-cert.iso27 { background: radial-gradient(circle at 30% 30%, #8a8a8a, #323130); }
+    .sp-final { text-align: center; color: #e30613; font-style: italic; font-weight: 800; font-size: 17px; padding: 16px 20px; background: #fff; }
+    .sp-footer { background: #000; color: #a19f9d; font-size: 11px; padding: 10px 28px; }
+    .sp-footer-inner { max-width: 1200px; margin: 0 auto; }
+    .sp-badge-demo { position: fixed; top: 12px; left: 12px; z-index: 9000; background: rgba(0,0,0,.72); color: #fff; font-size: 11px; padding: 7px 10px; border-radius: 999px; }
+    @media (max-width: 900px) {
+      .sp-hero-inner { grid-template-columns: 1fr; }
+      .sp-dc-title { text-align: left; }
+      .sp-carousel { grid-template-columns: 1fr 1fr; }
     }
 
     /* ===== BOTÃO FLUTUANTE PARA ABRIR/FECHAR O CHAT ===== */
@@ -251,6 +346,82 @@
   </style>
 </head>
 <body>
+  <!-- ===== MOCK SHAREPOINT DATA CENTER SD FIEL (cenário estático, sem links) ===== -->
+  <div class="sp-mock" aria-hidden="true">
+    <div class="sp-badge-demo">Demonstração — página ilustrativa, sem links</div>
+    <header class="sp-hero-top">
+      <div class="sp-hero-inner">
+        <div class="sp-logo-ph"><span class="claro">Claro</span><span class="empresas">empresas</span></div>
+        <div class="sp-dc-title"><b>Data Center</b><b>Soluções Digitais [SD]</b></div>
+        <div class="sp-worldclock">São Paulo, Brasil<small>Relógio mundial • 11:32</small></div>
+      </div>
+    </header>
+    <section class="sp-news">
+      <div class="sp-news-inner">
+        <div class="sp-news-head"><span>Notícias</span><span>∨</span></div>
+        <div class="sp-carousel">
+          <div class="sp-news-card"><div class="sp-news-thumb">NOTÍCIAS DATA CENTER</div><div class="body"><b>Zabbix — Reset de Senha fora do horário comercial</b>19 de agosto • Fabiana Pinto</div></div>
+          <div class="sp-news-card"><div class="sp-news-thumb">NOTÍCIAS DATA CENTER</div><div class="body"><b>Zabbix | Suspensão Monitoração</b>3 de agosto • rotina operacional NOC</div></div>
+          <div class="sp-news-card"><div class="sp-news-thumb">NOTÍCIAS DATA CENTER</div><div class="body"><b>OTRS (Znuny) | Manutenção 17/07 a 18/07/2026</b>15 de julho • patches de segurança</div></div>
+          <div class="sp-news-card"><div class="sp-news-thumb">NOTÍCIAS DATA CENTER</div><div class="body"><b>Foto Corporativa | Operação DC-Data Hall</b>24 de junho • padronização</div></div>
+          <div class="sp-news-card"><div class="sp-news-thumb">NOTÍCIAS DATA CENTER</div><div class="body"><b>Escalonamento Suporte N3 e Torres</b>15 de maio • lista de acionamento</div></div>
+        </div>
+      </div>
+    </section>
+    <div class="sp-quick"><div class="sp-quick-inner">
+      <span class="sp-chip">👥 Painel Colaborador</span>
+      <span class="sp-chip">📅 Escalas</span>
+      <span class="sp-chip">⚙️ Procedimentos</span>
+      <span class="sp-chip">📄 Documentos</span>
+    </div></div>
+    <div class="sp-quote-red">Disponibilidade, agilidade e controle 24x7 para impulsionar o negócio.</div>
+    <section class="sp-darkbox"><div class="sp-dark-inner">
+      <h2>Data Center Soluções Digitais [SD]</h2>
+      <p>Somos o núcleo que sustenta a operação crítica da <b>Claro empresas</b> na unidades Data Centers Soluções Digitais em nível nacional. Nós unimos o NOC, Operação e Logística Data Center [DC] para entregar alta disponibilidade, resposta rápida a incidentes, execução padronizada e governança completa de ativos. Atuamos de ponta a ponta: da monitoração e correlação de eventos, passando pela execução técnica em campo, até a gestão física e documental dos equipamentos sempre 24x7 e orientados por métodos ágeis, ITIL, SLA, KPI, Znuny (ITSM) e SAP.</p>
+        <div class="sp-flow">
+          <div class="sp-node n1">NOC N1<small>Monitoramento</small></div><div class="sp-conn"><i></i>Connect</div>
+          <div class="sp-node n2">NOC N2<small>Servidores</small></div><div class="sp-conn"><i></i>Connect</div>
+          <div class="sp-node log">LOGÍSTICA<small>Sustentação</small></div><div class="sp-conn"><i></i>Connect3</div>
+          <div class="sp-node ops">OPERAÇÃO<small>Infraestrutura</small></div>
+        </div>
+        <p class="sp-quote-white">Quando trabalhamos juntos, não apenas mantemos a infraestrutura, nós transformamos desafios em resultados.</p>
+      </div>
+    </section>
+    <section class="sp-services"><div class="sp-services-inner">
+      <h2>Serviços Data Center</h2>
+      <div class="sp-mission">Nossa <b class="red">Missão</b> é entregar disponibilidade e garantir uma infraestrutura segura e eficiente para suas operações críticas e atuamos em:</div>
+      <ul class="sp-mission-list">
+        <li>Integração fim-a-fim entre monitoração, execução técnica e gestão de ativos;</li>
+        <li>Análise de causa raiz e intermediação entre áreas para resolução;</li>
+        <li>Métodos ágeis para flexibilidade e entregas de valor em ciclos curtos;</li>
+        <li>Rigor em SLA/KPI, compliance com ITIL e processos padronizados;</li>
+        <li>Rastreabilidade e controle por Znuny e governança de ativos via SAP;</li>
+        <li>Suporte a servidores com gestão de Firmware e BIOS;</li>
+        <li>Instalação e configuração de equipamentos;</li>
+        <li>Expansão de rede óptica e elétrica;</li>
+        <li>Cross Connect e acesso via console;</li>
+        <li>Entrada e saída de equipamentos, inclusive acompanhamento de Moving;</li>
+        <li>Armazenamento de equipamentos; e</li>
+        <li>Orientação ao cliente e suporte em crises.</li>
+      </ul>
+      <div class="sp-note"><b>Nota</b>. Lista suprimida, e não limitada, para outros serviços consulte-nos.</div>
+      </div></section>
+    <section class="sp-manage"><div class="sp-manage-inner">
+      <h2>Gestão Data Center Soluções Digitais [SD]</h2>
+      <div class="sp-hero-card"><div><h3>Cristiano Viana</h3><p>Gestão Data Center SD • Data Hall • Operação 24x7</p></div></div>
+      </div></section>
+    <section class="sp-certs"><div class="sp-certs-inner">
+      <h2>Certificações Data Center</h2>
+      <div class="sp-cert-grid">
+        <div class="sp-cert tier"><b>Tier III</b><span>Tier de Sustentabilidade Operacional [TCOS]</span><small>Certificado Tier III:2025</small></div>
+        <div class="sp-cert ceeda"><b>CEEDA</b><span>Certified Energy Efficient Datacenter Award [CEEDA]</span><small>Certificado CEEDA:2025</small></div>
+        <div class="sp-cert iso45"><b>ISO 45001</b><span>Sistema de Gestão de Saúde e Segurança Ocupacional [SGSSO]</span><small>Certificado ISO 45001:2025</small></div>
+        <div class="sp-cert iso27"><b>ISO 27001</b><span>Gestão da Segurança da Informação [SGSI]</span><small>Certificado ISO 27001:2025</small></div>
+      </div>
+      </div></section>
+    <div class="sp-final">A infraestrutura e a operação de vocês são nossa prioridade!</div>
+    <footer class="sp-footer"><div class="sp-footer-inner"><b>Data Center Soluções Digitais [SD] | 2026</b> — ambiente de demonstração, sem links</div></footer>
+  </div>
   <!-- ================================================================ -->
   <!-- BALÃO DE BOAS-VINDAS (aparece após alguns segundos)              -->
   <!-- ================================================================ -->
@@ -294,28 +465,61 @@
         <!-- Robô Charles -->
         <div class="robot-wrapper">
           <div class="robot-glow"></div>
-          <img src="frontend/assets/charles-removebg-preview.png" class="robot-icon" id="robotIcon" alt="Charles - Assistente Virtual">
+          <img src="/assets/charles-removebg-preview.png" class="robot-icon" id="robotIcon" alt="Charles - Assistente Virtual">
+          <!-- Indicador de estado (visível mesmo sem animação) -->
+          <div class="robot-status" id="robotStatus" role="status" aria-live="polite"></div>
           <!-- Onda sonora (aparece quando escutando) -->
           <div class="sound-waves" id="soundWaves">
             <span></span><span></span><span></span><span></span><span></span>
+          </div>
+
+          <!-- Labios para sincronia labial -->
+          <div class="mouth" id="mouth">
+            <div class="mouth-viseme" id="mouth-viseme-a"></div>
+            <div class="mouth-viseme" id="mouth-viseme-e"></div>
+            <div class="mouth-viseme" id="mouth-viseme-i"></div>
+            <div class="mouth-viseme" id="mouth-viseme-o"></div>
+            <div class="mouth-viseme" id="mouth-viseme-u"></div>
+            <div class="mouth-viseme" id="mouth-viseme-m"></div>
+            <div class="mouth-viseme" id="mouth-viseme-n"></div>
+            <div class="mouth-viseme" id="mouth-viseme-l"></div>
+            <div class="mouth-viseme" id="mouth-viseme-s"></div>
+            <div class="mouth-viseme" id="mouth-viseme-r"></div>
+            <div class="mouth-viseme" id="mouth-viseme-ch"></div>
+            <div class="mouth-viseme" id="mouth-viseme-g"></div>
+            <div class="mouth-viseme" id="mouth-viseme-k"></div>
+            <div class="mouth-viseme" id="mouth-viseme-f"></div>
+            <div class="mouth-viseme" id="mouth-viseme-v"></div>
+            <div class="mouth-viseme" id="mouth-viseme-sh"></div>
+            <div class="mouth-viseme" id="mouth-viseme-z"></div>
+            <div class="mouth-viseme" id="mouth-viseme-j"></div>
+            <div class="mouth-viseme" id="mouth-viseme-lh"></div>
+          <!-- Bug corrigido: 'mouth-viseme-t' era referenciado pelo app.js
+               mas nunca existiu no HTML, entao a boca ficava travada. -->
+          <div class="mouth-viseme" id="mouth-viseme-t"></div>
           </div>
         </div>
 
         <!-- Texto dinâmico -->
         <p class="voice-hint" id="voiceHint">Clique no microfone e pergunte</p>
 
-        <!-- Botão microfone grande -->
-        <button class="voice-mic-btn" id="voiceMicBtn" aria-label="Falar" title="Clique para perguntar">
-          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
-            <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
-          </svg>
-        </button>
-
-        <!-- Alternativa: digitar texto -->
-        <div class="voice-type-alt">
-          <span class="alt-divider">ou</span>
-          <button class="alt-type-btn" id="altTypeBtn">Digitar pergunta</button>
+        <!-- Botões: Microfone + Texto lado a lado -->
+        <div class="voice-buttons-row">
+          <div class="voice-btn-group">
+            <button class="voice-mic-btn" id="voiceMicBtn" aria-label="Falar com o Charles por voz" title="Falar (clique e fale)">
+              <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+              </svg>
+            </button>
+            <span class="voice-btn-label">Falar</span>
+          </div>
+          <div class="voice-btn-group">
+            <button class="voice-text-btn" id="voiceTextBtn" aria-label="Digitar" title="Digitar pergunta">
+              <img src="/assets/escrever.jpg" alt="Digitar" class="voice-text-icon">
+            </button>
+            <span class="voice-btn-label">Digitar</span>
+          </div>
         </div>
       </div>
     </div>
@@ -325,7 +529,7 @@
 
       <!-- HEADER -->
       <header class="chat-header">
-        <img src="assets/Claro-logo.jpg" alt="Logo" class="logo" id="logoEmpresa">
+        <img src="/assets/Claro-logo.jpg" alt="Logo" class="logo" id="logoEmpresa">
         <div class="header-info">
           <h1>Charles</h1>
           <div class="status">
@@ -381,7 +585,7 @@
 
       <!-- FOOTER -->
       <footer class="chat-footer">
-        <span>© 2026 Departamento de Data Center - Claro Empresas | <a href="#" onclick="return false;">SharePoint</a></span>
+        <span>© 2026 Departamento de Data Center - Claro Empresas | SharePoint</span>
       </footer>
     </div>
 
@@ -390,9 +594,11 @@
   <!-- ================================================================ -->
   <!-- JAVASCRIPT DO CHATBOT                                            -->
   <!-- ================================================================ -->
-  <script src="frontend/js/api-client.js"></script>
-  <script src="frontend/js/voice.js"></script>
-  <script src="frontend/js/app.js"></script>
+  <script src="/js/api-client.js"></script>
+  <script src="/js/voice-client.js"></script>
+  <script src="/js/lip-sync.js"></script>
+  <script src="/js/voice.js"></script>
+  <script src="/js/app.js"></script>
 
   <!-- ================================================================ -->
   <!-- SCRIPT DE CONTROLE DO BOTÃO FLUTUANTE E BALÃO                    -->
@@ -491,4 +697,3 @@
 
 </body>
 </html>
-]]>
