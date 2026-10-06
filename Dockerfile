@@ -52,7 +52,6 @@ RUN npm ci --only=production --ignore-scripts
 
 # Usuário não-root para segurança
 RUN addgroup -S charles && adduser -S charles -G charles
-USER charles
 
 # Copia código de produção
 COPY --from=builder /app/backend ./backend
@@ -61,6 +60,12 @@ COPY --from=builder /app/assets ../assets/
 COPY --from=builder /app/FQ_DATA_CENTER.xls ../
 COPY --from=builder /app/sites_data_center.xlsx ../
 COPY --from=builder /app/.env.example ../
+
+# Diretórios graváveis pelo servidor (uploads/SQLite em data/, cache de
+# thumbnails) e dono: sem isso o usuário non-root recebe EACCES no boot
+RUN mkdir -p /app/data /app/thumbnails \
+  && chown -R charles:charles /app
+USER charles
 
 # Health check (status da API)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=5 \
