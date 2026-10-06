@@ -9,6 +9,10 @@ FROM node:24-alpine AS builder
 
 WORKDIR /app
 
+# Toolchain para node-gyp: o npm dispara "node-gyp rebuild" do
+# better-sqlite3 durante npm ci e o alpine não traz python/make/g++
+RUN apk add --no-cache python3 make g++
+
 # Copia apenas package files para aproveitar cache do Docker
 COPY backend/package*.json ./
 
