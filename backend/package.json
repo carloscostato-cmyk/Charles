@@ -3,6 +3,9 @@
   "version": "4.2.0",
   "description": "Backend do Chatbot Charles v4.2 - AI Agent com Cache Redis + 209 Testes",
   "main": "server.js",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",

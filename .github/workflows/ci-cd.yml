@@ -21,7 +21,9 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [18.x, 20.x]
+        # better-sqlite3@13 e openai@7 exigem node >=22 (engines).
+        # Node 18/20 davam SIGSEGV nos testes (EBADENGINE no npm ci).
+        node-version: [22.x, 24.x]
 
     steps:
       - name: 📥 Checkout do código

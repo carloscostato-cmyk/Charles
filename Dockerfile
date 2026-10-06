@@ -4,7 +4,8 @@
 # ============================================================
 
 # ---------- STAGE 1: BUILDER (instala dependências completas) ----------
-FROM node:20-alpine AS builder
+# node >=22: exigido por better-sqlite3@13 e openai@7 (engines)
+FROM node:24-alpine AS builder
 
 WORKDIR /app
 
@@ -34,7 +35,7 @@ RUN cd backend && npx jest --ci --coverage --maxWorkers=2 || (echo "❌ Testes f
 RUN node backend/scripts/check-guardians.js || echo "⚠️ Guardiões não executados (script opcional)"
 
 # ---------- STAGE 3: RUNTIME (produção enxuta) ----------
-FROM node:20-alpine AS runtime
+FROM node:24-alpine AS runtime
 
 WORKDIR /app
 

@@ -144,13 +144,13 @@ O Dockerfile foi criado para:
 - ✅ Node.js 20 LTS
 
 ```dockerfile
-FROM node:20-alpine AS builder
+FROM node:24-alpine AS builder
 # Instala dependências completas para testes
 
 FROM builder AS test
 # Roda testes + guardiões
 
-FROM node:20-alpine AS runtime
+FROM node:24-alpine AS runtime
 # Produção enxuta com usuário não-root
 ```
 
